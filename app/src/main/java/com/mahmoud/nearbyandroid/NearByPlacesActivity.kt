@@ -7,10 +7,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnSuccessListener
 import com.mahmoud.nearbyandroid.viewmodels.NearByPlacesViewModel
+import kotlinx.android.synthetic.main.activity_main.*
 
 class NearByPlacesActivity : AppCompatActivity(), OnSuccessListener<Location> {
 
@@ -40,6 +42,18 @@ class NearByPlacesActivity : AppCompatActivity(), OnSuccessListener<Location> {
             // Permission has already been granted
             getLocation()
         }
+
+        with(viewModel) {
+            progressVisbilityState.observe(this@NearByPlacesActivity, Observer { state -> progressBar.visibility = state })
+            errorVisbilityState.observe(this@NearByPlacesActivity, Observer { state -> errorView.visibility = state })
+            bodyVisbilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
+
+            errorState.observe(this@NearByPlacesActivity, Observer { error -> error?.let {errorObject ->
+                imageView_error.setImageResource(errorObject.errorDrawableResource)
+                textView_error.text = resources.getString(errorObject.errorBodyResource)
+            } })
+        }
+
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -57,7 +71,7 @@ class NearByPlacesActivity : AppCompatActivity(), OnSuccessListener<Location> {
     }
 
     private fun getLocation() {
-        locationProvider.lastLocation.addOnSuccessListener(this)
+        viewModel.checkLocation()
     }
 
     override fun onSuccess(location: Location?) {

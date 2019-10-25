@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">NearBy-Android</string>
+    <string name="error_wrong">Something went wrong !!</string>
 </resources>
