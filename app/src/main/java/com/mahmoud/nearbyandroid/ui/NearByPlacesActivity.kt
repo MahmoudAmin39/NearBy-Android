@@ -1,4 +1,4 @@
-package com.mahmoud.nearbyandroid
+package com.mahmoud.nearbyandroid.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import android.content.IntentSender
 import android.os.Looper
 import android.view.Menu
+import com.mahmoud.nearbyandroid.R
 
 class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
@@ -178,7 +179,8 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Permission is not granted
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSION_LOCATION)
+                PERMISSION_LOCATION
+            )
         } else {
             // Permission has already been granted
             getLocation()
@@ -191,7 +193,9 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         if (p0.hasResolution()) {
             try {
                 // Start an Activity that tries to resolve the error
-                p0.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST)
+                p0.startResolutionForResult(this,
+                    CONNECTION_FAILURE_RESOLUTION_REQUEST
+                )
             } catch (e: IntentSender.SendIntentException) {
                 e.printStackTrace()
             }
