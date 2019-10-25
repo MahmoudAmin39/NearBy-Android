@@ -26,7 +26,7 @@ class NearByPlacesViewModel : ViewModel() {
     private val networkInformation = NetworkInformation()
     private var appMode: AppModes = AppModes.Realtime
     companion object {
-        const val THRESHOLD = 500
+        const val METERS_THRESHOLD = 500
     }
 
     // Errors
@@ -49,7 +49,6 @@ class NearByPlacesViewModel : ViewModel() {
     val menuItemTitle: MutableLiveData<Int> = MutableLiveData(R.string.realtime)
 
     // region Places logic
-
     fun getPlaces(location: Location?) {
         showProgress()
         location?.let {currentLocation ->
@@ -110,7 +109,7 @@ class NearByPlacesViewModel : ViewModel() {
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
             val distance = currentLocation.distanceTo(lastLocationSentToServer)
-            if (distance > THRESHOLD) {
+            if (distance > METERS_THRESHOLD) {
                 this.lastLocationSentToServer = currentLocation
                 loadPlaces(currentLocation)
             }
