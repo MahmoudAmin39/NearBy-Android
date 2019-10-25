@@ -1,6 +1,7 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
 import androidx.lifecycle.MutableLiveData
+import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_SECRET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.DATE_VERSION
@@ -13,6 +14,7 @@ import retrofit2.Response
 class PlaceViewModel {
 
     val imageUrl = MutableLiveData("")
+    val errorIcon = MutableLiveData(0)
 
     companion object {
         const val IMAGE_WIDTH = 100
@@ -23,13 +25,13 @@ class PlaceViewModel {
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)?.enqueue(object : Callback<PhotoResponseFromServer> {
             override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
-
+                errorIcon.value = R.drawable.ic_error
             }
 
             override fun onResponse(call: Call<PhotoResponseFromServer>, response: Response<PhotoResponseFromServer>) {
                 when(response.body()) {
                     null -> {
-                        // TODO: Handle Error here
+                        errorIcon.value = R.drawable.ic_error
                     }
                     else -> { handleResponse(response) }
                 }
@@ -46,7 +48,7 @@ class PlaceViewModel {
                 return
             }
         } else {
-            // TODO: Handle Error here
+            errorIcon.value = R.drawable.ic_error
         }
     }
 }

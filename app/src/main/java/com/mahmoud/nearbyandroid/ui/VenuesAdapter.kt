@@ -56,6 +56,12 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
                     Glide.with(itemView.context).load(imageUrl).into(venueImage)
                 }
             })
+
+            viewModel.errorIcon.observe(lifecycleOwner, Observer{ errorIcon ->
+                if (errorIcon != 0) {
+                    venueImage.setImageResource(errorIcon)
+                }
+            })
         }
     }
 }
