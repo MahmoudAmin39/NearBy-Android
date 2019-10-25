@@ -15,6 +15,8 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
 import com.mahmoud.nearbyandroid.viewmodels.NearByPlacesViewModel
 import kotlinx.android.synthetic.main.activity_main.*
+import android.content.IntentSender
+import android.os.Looper
 
 class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
@@ -35,17 +37,39 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             .build()
     }
 
-    private lateinit var locationProvider: FusedLocationProviderClient
+    private val locationRequest by lazy {
+        LocationRequest.create().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY).setInterval(LOCATION_UPDATE_INTERVAL)
+    }
+
+    private val locationProvider by lazy {
+        LocationServices.getFusedLocationProviderClient(this)
+    }
+
+    private val locationCallback by lazy {
+        object : LocationCallback() {
+
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                for (location in locationResult.locations) {
+
+                }
+            }
+        }
+    }
+
 
     companion object {
         const val PERMISSION_LOCATION = 1
+        const val CONNECTION_FAILURE_RESOLUTION_REQUEST = 2
+        // Assuming that the user is walking
+        // According to Wikipedia The average walking speed is 1.4 m/s so for a person to walk 500 meters he will
+        // need about 5.95 minutes
+        const val LOCATION_UPDATE_INTERVAL: Long = 1000 * 10/** 60 * 5*/
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        locationProvider = LocationServices.getFusedLocationProviderClient(this)
 
         with(viewModel) {
             progressVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> progressBar.visibility = state })
@@ -84,6 +108,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.setLocationSentToServer(location)}
     }
 
+    private fun getLocationUpdates() {
+        locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+
     // region Activity lifecycle callbacks
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -92,14 +120,13 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted
-                    getLocation()
+                    getLocationUpdates()
                 } else {
                     // permission denied
                 }
             }
         }
     }
-
 
     override fun onStart() {
         super.onStart()
@@ -109,6 +136,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     override fun onStop() {
         if (googleApiClient.isConnected) {
             googleApiClient.disconnect()
+        }
+
+        if (locationCallback != null) {
+            locationProvider.removeLocationUpdates(locationCallback)
         }
         super.onStop()
     }
@@ -126,7 +157,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 PERMISSION_LOCATION)
         } else {
             // Permission has already been granted
-            getLocation()
+            getLocationUpdates()
         }
     }
 
@@ -135,8 +166,19 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        Log.d("Mahmoud", p0.errorMessage.toString())
+        if (p0.hasResolution()) {
+            try {
+                // Start an Activity that tries to resolve the error
+                p0.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST)
+            } catch (e: IntentSender.SendIntentException) {
+                e.printStackTrace()
+            }
+
+        } else {
+            Log.d("ConnectionErrors", "Location services connection failed with code: " + p0.errorCode)
+        }
     }
 
     // endregion
+
 }

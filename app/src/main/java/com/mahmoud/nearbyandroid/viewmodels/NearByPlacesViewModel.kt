@@ -12,6 +12,7 @@ import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 class NearByPlacesViewModel : ViewModel() {
 
     private var lastLocationSentToServer: Location? = null
+    private var currentUserLocation: Location? = null
 
     private val networkInformation = NetworkInformation()
     private val locationInfoProvider = LocationInfoProvider()
@@ -43,6 +44,15 @@ class NearByPlacesViewModel : ViewModel() {
         // Location is null
         showError(R.string.no_location_error, R.drawable.ic_location_disabled)
         shouldReceiveLocationBroadCasts.value = true
+    }
+
+    fun setCurrentUserLocation(location: Location?) {
+        location?.let { currentLocation ->
+            val distance = lastLocationSentToServer?.distanceTo(currentLocation)
+            if (distance != null && distance > 500) {
+
+            }
+        }
     }
 
     // endregion
