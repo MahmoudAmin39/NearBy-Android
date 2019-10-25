@@ -9,11 +9,13 @@ import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.models.AppModes
 import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.ResponseFromServer
+import com.mahmoud.nearbyandroid.data.models.Venue
 import com.mahmoud.nearbyandroid.data.retrofit.RetrofitClient
 import com.mahmoud.nearbyandroid.helpers.LocationInfoProvider
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 import retrofit2.Call
 import retrofit2.Callback
+import retrofit2.Response
 
 class NearByPlacesViewModel : ViewModel() {
 
@@ -56,27 +58,7 @@ class NearByPlacesViewModel : ViewModel() {
                 }
                 else -> {
                     // Internet is available
-                    // TODO: Send the request
-                    val lat = currentLocation.latitude
-                    val long = currentLocation.longitude
-                    val latLong = String.format("%f,%f", lat, long)
-                    RetrofitClient.getInstance().placesService?.getPlaces(latLong,
-                        "5AAKGAAOYCKET3DK3IRT42YQOBP50EGTJU4S0U1P1GE3QEI5",
-                        "WVTGKRKUHSEFTCHYVUWBDTOJRQZXROA5WIE3LJBL3MX0U0TJ", "20191031")!!
-                        .enqueue(object : Callback<ResponseFromServer> {
-                            override fun onFailure(call: Call<ResponseFromServer>, t: Throwable) {
-                                Log.d("Mahmoud", "Group")
-                            }
-
-                            override fun onResponse(
-                                call: Call<ResponseFromServer>,
-                                response: retrofit2.Response<ResponseFromServer>
-                            ) {
-                                val body = response.body()
-                                Log.d("Mahmoud", "Group")
-                            }
-
-                        })
+                    loadPlaces(currentLocation)
                 }
             }
             return
@@ -89,6 +71,33 @@ class NearByPlacesViewModel : ViewModel() {
         } else {
             shouldStartLocationUpdate.value = true
         }
+    }
+
+    private fun loadPlaces(currentLocation: Location) {
+        val lat = currentLocation.latitude
+        val long = currentLocation.longitude
+        val latLong = String.format("%f,%f", lat, long)
+        RetrofitClient.getInstance().placesService?.getPlaces(
+            latLong,
+            "5AAKGAAOYCKET3DK3IRT42YQOBP50EGTJU4S0U1P1GE3QEI5",
+            "WVTGKRKUHSEFTCHYVUWBDTOJRQZXROA5WIE3LJBL3MX0U0TJ", "20191031"
+        )!!
+            .enqueue(object : Callback<ResponseFromServer> {
+                override fun onFailure(call: Call<ResponseFromServer>, t: Throwable) {
+                    Log.d("Mahmoud", "Group")
+                }
+
+                override fun onResponse(call: Call<ResponseFromServer>, response: Response<ResponseFromServer>) {
+                    response.body()?.response!!.groups[0].items.map {
+                        val venue = it["venue"] as? Map<String, Any>
+                        venue?.let{
+                            val venueObject = Venue(venue)
+                            Log.d("Mahmoud", venueObject!!.name)
+                            Log.d("Mahmoud", venueObject!!.location)
+                        }
+                    }
+                }
+            })
     }
 
     // region Location logic

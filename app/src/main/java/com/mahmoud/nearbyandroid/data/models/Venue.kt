@@ -1,7 +1,7 @@
 package com.mahmoud.nearbyandroid.data.models
 
-import com.google.gson.annotations.SerializedName
+data class Venue(val id: String?, val name: String?, val location: String?) {
 
-data class Venue(@SerializedName("id") val id: String,
-                 @SerializedName("name") val name: String,
-                 @SerializedName("location") val location: LocationAddress)
+    constructor(map: Map<String, Any>) : this(map["id"] as? String, map["name"] as? String,
+        (map["location"] as Map<String, Any>)["address"] as? String)
+}
