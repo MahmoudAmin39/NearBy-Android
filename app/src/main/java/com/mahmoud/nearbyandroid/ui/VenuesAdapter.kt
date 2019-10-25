@@ -24,6 +24,11 @@ class VenuesAdapter(private val venues: ArrayList<Venue>) : RecyclerView.Adapter
         holder.bindViews(venues[position])
     }
 
+    fun addVenues(venues: ArrayList<Venue>) {
+        this.venues.clear()
+        this.venues.addAll(venues)
+        notifyDataSetChanged()
+    }
 
     inner class VenueViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 

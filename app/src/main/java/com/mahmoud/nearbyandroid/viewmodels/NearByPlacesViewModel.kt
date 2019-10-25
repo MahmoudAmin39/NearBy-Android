@@ -99,8 +99,8 @@ class NearByPlacesViewModel : ViewModel() {
                             venues.add(venueObject)
                         }
                     }
-
                     venuesData.value = venues
+                    showListView()
                 }
             })
     }
