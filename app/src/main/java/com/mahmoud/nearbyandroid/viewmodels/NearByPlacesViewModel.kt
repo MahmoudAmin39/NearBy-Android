@@ -12,7 +12,6 @@ import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 class NearByPlacesViewModel : ViewModel() {
 
     private var lastLocationSentToServer: Location? = null
-    private var currentUserLocation: Location? = null
 
     private val networkInformation = NetworkInformation()
     private val locationInfoProvider = LocationInfoProvider()
@@ -22,7 +21,7 @@ class NearByPlacesViewModel : ViewModel() {
     val alertMessage: MutableLiveData<Int> = MutableLiveData(0)
 
     // Visibility
-    val bodyVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
+    val placesListVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
     val errorVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
     val progressVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
 
@@ -50,30 +49,30 @@ class NearByPlacesViewModel : ViewModel() {
         location?.let { currentLocation ->
             val distance = lastLocationSentToServer?.distanceTo(currentLocation)
             if (distance != null && distance > 500) {
-
+                this.lastLocationSentToServer = currentLocation
+                // TODO: Send a request to Foursquare API
             }
         }
     }
 
     // endregion
 
-
     // region Visibility manipulators
-    private fun showBody() {
+    private fun showListView() {
         progressVisibilityState.value = View.GONE
-        bodyVisibilityState.value = View.VISIBLE
+        placesListVisibilityState.value = View.VISIBLE
         errorVisibilityState.value = View.GONE
     }
 
     private fun showProgress() {
         progressVisibilityState.value = View.VISIBLE
-        bodyVisibilityState.value = View.GONE
+        placesListVisibilityState.value = View.GONE
         errorVisibilityState.value = View.GONE
     }
 
     private fun showError(errorMessage: Int, errorDrawable: Int) {
         progressVisibilityState.value = View.GONE
-        bodyVisibilityState.value = View.GONE
+        placesListVisibilityState.value = View.GONE
         errorVisibilityState.value = View.VISIBLE
 
         errorState.value = ErrorMessage(errorBodyResource = errorMessage, errorDrawableResource = errorDrawable)

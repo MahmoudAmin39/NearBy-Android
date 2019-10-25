@@ -50,13 +50,11 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
 
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
-                for (location in locationResult.locations) {
-
-                }
+                val location = locationResult.locations[0]
+                viewModel.setCurrentUserLocation(location)
             }
         }
     }
-
 
     companion object {
         const val PERMISSION_LOCATION = 1
@@ -74,7 +72,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         with(viewModel) {
             progressVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> progressBar.visibility = state })
             errorVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> errorView.visibility = state })
-            bodyVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
+            placesListVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
 
             // Error object to show
             errorState.observe(this@NearByPlacesActivity, Observer { error -> error?.let {errorObject ->
