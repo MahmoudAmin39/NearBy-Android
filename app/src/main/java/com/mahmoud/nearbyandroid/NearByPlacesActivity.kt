@@ -12,12 +12,12 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.mahmoud.nearbyandroid.viewmodels.NearByPlacesViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
-class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
+    GoogleApiClient.OnConnectionFailedListener {
 
     private val viewModel by lazy {
         ViewModelProviders.of(this)[NearByPlacesViewModel::class.java]
@@ -32,7 +32,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             .addConnectionCallbacks(this)
             .addOnConnectionFailedListener(this)
             .addApi(LocationServices.API)
-            .build();
+            .build()
     }
 
     private lateinit var locationProvider: FusedLocationProviderClient
@@ -80,6 +80,12 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
 
     }
 
+    private fun getLocation() {
+        locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.setLocationSentToServer(location)}
+    }
+
+    // region Activity lifecycle callbacks
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSION_LOCATION -> {
@@ -94,12 +100,9 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         }
     }
 
-    private fun getLocation() {
-        locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.setLocationSentToServer(location)}
-    }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         googleApiClient.connect()
     }
 
@@ -132,7 +135,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-        Log.d("Mahmoud", p0!!.errorMessage)
+        Log.d("Mahmoud", p0.errorMessage.toString())
     }
 
     // endregion

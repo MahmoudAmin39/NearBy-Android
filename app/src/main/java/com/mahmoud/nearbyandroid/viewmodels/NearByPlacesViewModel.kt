@@ -48,7 +48,6 @@ class NearByPlacesViewModel : ViewModel() {
     // endregion
 
 
-
     // region Visibility manipulators
     private fun showBody() {
         progressVisibilityState.value = View.GONE
