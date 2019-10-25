@@ -5,6 +5,7 @@ import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.mahmoud.nearbyandroid.R
+import com.mahmoud.nearbyandroid.data.models.AppModes
 import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.helpers.LocationInfoProvider
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
@@ -15,6 +16,7 @@ class NearByPlacesViewModel : ViewModel() {
 
     private val networkInformation = NetworkInformation()
     private val locationInfoProvider = LocationInfoProvider()
+    private var appMode: AppModes = AppModes.Realtime
 
     // Errors
     val errorState: MutableLiveData<ErrorMessage?> = MutableLiveData(null)
@@ -28,6 +30,34 @@ class NearByPlacesViewModel : ViewModel() {
     // Broadcast receivers
     val shouldReceiveLocationBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
     val shouldReceiveNetworkBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
+    val shouldStartLocationUpdate: MutableLiveData<Boolean> = MutableLiveData(false)
+
+    // region Places logic
+
+    fun getPlaces(location: Location?) {
+        location?.let {currentLocation ->
+            // Location is not null
+            when(networkInformation.isInternetConnected()) {
+                false -> {
+                    showError(R.string.no_internet_error, R.drawable.ic_cloud_off)
+                    shouldReceiveNetworkBroadCasts.value = true
+                }
+                else -> {
+                    // Internet is available
+                    // TODO: Send the request
+                }
+            }
+            return
+        }
+
+        // Location is null
+        showError(R.string.no_location_error, R.drawable.ic_location_disabled)
+        if (appMode == AppModes.SingleUpdate) {
+            shouldReceiveLocationBroadCasts.value = true
+        } else {
+            shouldStartLocationUpdate.value = true
+        }
+    }
 
     // region Location logic
     fun setLocationSentToServer(location: Location?) {
@@ -40,9 +70,7 @@ class NearByPlacesViewModel : ViewModel() {
             }
             return
         }
-        // Location is null
-        showError(R.string.no_location_error, R.drawable.ic_location_disabled)
-        shouldReceiveLocationBroadCasts.value = true
+
     }
 
     fun setCurrentUserLocation(location: Location?) {

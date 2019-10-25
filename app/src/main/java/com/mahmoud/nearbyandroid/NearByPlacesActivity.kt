@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -96,8 +95,21 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             })
 
             // Broadcast Listening
-            shouldReceiveLocationBroadCasts.observe(this@NearByPlacesActivity, Observer { should -> })
-            shouldReceiveNetworkBroadCasts.observe(this@NearByPlacesActivity, Observer { should -> })
+            shouldReceiveLocationBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
+                if (should) {
+                    // TODO: Start Receiving Location changes
+                }
+            })
+            shouldReceiveNetworkBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
+                if (should) {
+                    // TODO: Start Receiving Networking changes
+                }
+            })
+            shouldStartLocationUpdate.observe(this@NearByPlacesActivity, Observer { should ->
+                if (should) {
+                    getLocationUpdates()
+                }
+            })
         }
 
     }
@@ -118,9 +130,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted
-                    getLocationUpdates()
+                    getLocation()
                 } else {
                     // permission denied
+                    // TODO: Send the view model that permission was denied
                 }
             }
         }
@@ -155,13 +168,11 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 PERMISSION_LOCATION)
         } else {
             // Permission has already been granted
-            getLocationUpdates()
+            getLocation()
         }
     }
 
-    override fun onConnectionSuspended(p0: Int) {
-
-    }
+    override fun onConnectionSuspended(p0: Int) {}
 
     override fun onConnectionFailed(p0: ConnectionResult) {
         if (p0.hasResolution()) {
@@ -171,9 +182,8 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             } catch (e: IntentSender.SendIntentException) {
                 e.printStackTrace()
             }
-
         } else {
-            Log.d("ConnectionErrors", "Location services connection failed with code: " + p0.errorCode)
+            // TODO: Send the view model that Failed connection with Google APIs
         }
     }
 
