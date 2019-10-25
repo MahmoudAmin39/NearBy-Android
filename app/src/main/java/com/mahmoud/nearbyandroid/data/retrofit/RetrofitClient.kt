@@ -1,5 +1,6 @@
 package com.mahmoud.nearbyandroid.data.retrofit
 
+import com.mahmoud.nearbyandroid.data.Constants.Companion.BASE_URL
 import com.mahmoud.nearbyandroid.data.retrofit.services.PlacesService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -12,7 +13,7 @@ class RetrofitClient {
     init {
         if (retrofit == null) {
             retrofit = Retrofit.Builder()
-                .baseUrl("https://api.foursquare.com/v2/")
+                .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         }
