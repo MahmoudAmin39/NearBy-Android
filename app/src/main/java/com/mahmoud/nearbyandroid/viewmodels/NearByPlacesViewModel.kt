@@ -82,8 +82,8 @@ class NearByPlacesViewModel : ViewModel() {
 
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
-            val distance = lastLocationSentToServer?.distanceTo(currentLocation)
-            if (distance != null && distance > THRESHOLD) {
+            val distance = currentLocation.distanceTo(lastLocationSentToServer)
+            if (distance > THRESHOLD) {
                 this.lastLocationSentToServer = currentLocation
                 // TODO: Send a request to Foursquare API
             }

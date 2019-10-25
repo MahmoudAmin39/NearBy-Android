@@ -38,7 +38,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     }
 
     private val locationRequest by lazy {
-        LocationRequest.create().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY).setInterval(LOCATION_UPDATE_INTERVAL)
+        LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setInterval(LOCATION_UPDATE_INTERVAL)
+            .setFastestInterval(1000)
     }
 
     private val locationProvider by lazy {
@@ -50,7 +53,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
 
             override fun onLocationResult(locationResult: LocationResult?) {
                 locationResult ?: return
-                val location = locationResult.locations[0]
+                // According to docs
+                // The array of locations are sorted from oldest to newest
+                val latestLocationIndex = locationResult.locations.size - 1
+                val location = locationResult.locations[latestLocationIndex]
                 viewModel.setCurrentUserLocation(location)
             }
         }
@@ -61,9 +67,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     companion object {
         const val PERMISSION_LOCATION = 1
         const val CONNECTION_FAILURE_RESOLUTION_REQUEST = 2
-        // Assuming that the user is walking
-        // According to Wikipedia The average walking speed is 1.4 m/s so for a person to walk 500 meters he will
-        // need about 5.95 minutes
+        // The lower the interval, the better the accuracy
         const val LOCATION_UPDATE_INTERVAL: Long = 1000 * 10/** 60 * 5*/
     }
 
@@ -97,8 +101,6 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 }
             })
 
-
-
             // Broadcast Listening
             shouldReceiveLocationBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
                 if (should) {
@@ -116,7 +118,6 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 }
             })
         }
-
     }
 
     private fun getLocation() {
