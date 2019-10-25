@@ -122,10 +122,16 @@ class NearByPlacesViewModel : ViewModel() {
 
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
-            val distance = currentLocation.distanceTo(lastLocationSentToServer)
-            if (distance > METERS_THRESHOLD) {
+            if (lastLocationSentToServer == null) {
+                // The user opened the GPS after launching the app
                 this.lastLocationSentToServer = currentLocation
                 loadPlaces(currentLocation)
+            } else {
+                val distance = currentLocation.distanceTo(lastLocationSentToServer)
+                if (distance > METERS_THRESHOLD) {
+                    this.lastLocationSentToServer = currentLocation
+                    loadPlaces(currentLocation)
+                }
             }
         }
     }

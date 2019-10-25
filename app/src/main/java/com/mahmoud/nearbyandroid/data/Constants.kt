@@ -7,5 +7,7 @@ class Constants {
         const val CLIENT_ID = "5AAKGAAOYCKET3DK3IRT42YQOBP50EGTJU4S0U1P1GE3QEI5"
         const val CLIENT_SECRET = "WVTGKRKUHSEFTCHYVUWBDTOJRQZXROA5WIE3LJBL3MX0U0TJ"
         const val DATE_VERSION = "20200101"
+        const val SHARED_PREFS = "NearBy Data"
+        const val APP_MODE = "App_Mode"
     }
 }
