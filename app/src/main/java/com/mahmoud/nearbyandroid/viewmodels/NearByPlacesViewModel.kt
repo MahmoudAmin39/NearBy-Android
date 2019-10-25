@@ -14,7 +14,6 @@ import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.Venue
 import com.mahmoud.nearbyandroid.data.retrofit.RetrofitClient
-import com.mahmoud.nearbyandroid.helpers.LocationInfoProvider
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 import retrofit2.Call
 import retrofit2.Callback
@@ -25,7 +24,6 @@ class NearByPlacesViewModel : ViewModel() {
     private var lastLocationSentToServer: Location? = null
 
     private val networkInformation = NetworkInformation()
-    private val locationInfoProvider = LocationInfoProvider()
     private var appMode: AppModes = AppModes.Realtime
     companion object {
         const val THRESHOLD = 500
@@ -33,12 +31,14 @@ class NearByPlacesViewModel : ViewModel() {
 
     // Errors
     val errorState: MutableLiveData<ErrorMessage?> = MutableLiveData(null)
-    val alertMessage: MutableLiveData<Int> = MutableLiveData(0)
 
     // Visibility
     val placesListVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
     val errorVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
     val progressVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
+
+    // Data
+    val venuesData: MutableLiveData<ArrayList<Venue>> = MutableLiveData(ArrayList())
 
     // Broadcast receivers
     val shouldReceiveLocationBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
@@ -99,30 +99,20 @@ class NearByPlacesViewModel : ViewModel() {
                             venues.add(venueObject)
                         }
                     }
+
+                    venuesData.value = venues
                 }
             })
     }
 
     // region Location logic
-    fun setLocationSentToServer(location: Location?) {
-        location?.let {
-            this.lastLocationSentToServer = location
-            if (!locationInfoProvider.isLocationEnabled()) {
-                // The last known location maybe not the current
-                alertMessage.value = R.string.no_location_snackbar
-                shouldReceiveLocationBroadCasts.value = true
-            }
-            return
-        }
-
-    }
 
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
             val distance = currentLocation.distanceTo(lastLocationSentToServer)
             if (distance > THRESHOLD) {
                 this.lastLocationSentToServer = currentLocation
-                // TODO: Send a request to Foursquare API
+                loadPlaces(currentLocation)
             }
         }
     }

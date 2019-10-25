@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -24,10 +23,6 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
 
     private val viewModel by lazy {
         ViewModelProviders.of(this)[NearByPlacesViewModel::class.java]
-    }
-
-    private val alertDialogBuilder by lazy {
-        AlertDialog.Builder(this)
     }
 
     private val googleApiClient by lazy {
@@ -81,26 +76,14 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             errorVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> errorView.visibility = state })
             placesListVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
 
+            // Observe data
+
+
             // Error object to show
             errorState.observe(this@NearByPlacesActivity, Observer { error -> error?.let {errorObject ->
                 imageView_error.setImageResource(errorObject.errorDrawableResource)
                 textView_error.text = resources.getString(errorObject.errorBodyResource)
             } })
-
-            // Alert to show
-            alertMessage.observe(this@NearByPlacesActivity, Observer { alertMessage ->
-                when(alertMessage) {
-                    0 -> return@Observer
-                    else -> {
-                        with(alertDialogBuilder) {
-                            title = getString(R.string.recommendation)
-                            setMessage(getString(alertMessage))
-                            setPositiveButton(getString(R.string.ok)) { dialog, _ -> dialog.dismiss() }
-                            show()
-                        }
-                    }
-                }
-            })
 
             // Broadcast Listening
             shouldReceiveLocationBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
