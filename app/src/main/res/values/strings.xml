@@ -6,4 +6,5 @@
     <string name="recommendation">Recommendation</string>
     <string name="ok">Ok</string>
     <string name="no_internet_error">No internet connection</string>
+    <string name="realtime">Realtime</string>
 </resources>

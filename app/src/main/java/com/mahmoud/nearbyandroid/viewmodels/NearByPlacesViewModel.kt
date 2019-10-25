@@ -17,6 +17,9 @@ class NearByPlacesViewModel : ViewModel() {
     private val networkInformation = NetworkInformation()
     private val locationInfoProvider = LocationInfoProvider()
     private var appMode: AppModes = AppModes.Realtime
+    companion object {
+        const val THRESHOLD = 500
+    }
 
     // Errors
     val errorState: MutableLiveData<ErrorMessage?> = MutableLiveData(null)
@@ -32,9 +35,13 @@ class NearByPlacesViewModel : ViewModel() {
     val shouldReceiveNetworkBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
     val shouldStartLocationUpdate: MutableLiveData<Boolean> = MutableLiveData(false)
 
+    // Menu items
+    val menuItemTitle: MutableLiveData<Int> = MutableLiveData(R.string.realtime)
+
     // region Places logic
 
     fun getPlaces(location: Location?) {
+        showProgress()
         location?.let {currentLocation ->
             // Location is not null
             when(networkInformation.isInternetConnected()) {
@@ -76,7 +83,7 @@ class NearByPlacesViewModel : ViewModel() {
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
             val distance = lastLocationSentToServer?.distanceTo(currentLocation)
-            if (distance != null && distance > 500) {
+            if (distance != null && distance > THRESHOLD) {
                 this.lastLocationSentToServer = currentLocation
                 // TODO: Send a request to Foursquare API
             }

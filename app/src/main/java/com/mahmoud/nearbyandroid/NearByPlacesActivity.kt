@@ -16,6 +16,7 @@ import com.mahmoud.nearbyandroid.viewmodels.NearByPlacesViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.IntentSender
 import android.os.Looper
+import android.view.Menu
 
 class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
@@ -55,6 +56,8 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         }
     }
 
+    private lateinit var menu: Menu
+
     companion object {
         const val PERMISSION_LOCATION = 1
         const val CONNECTION_FAILURE_RESOLUTION_REQUEST = 2
@@ -93,6 +96,8 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                     }
                 }
             })
+
+
 
             // Broadcast Listening
             shouldReceiveLocationBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
@@ -153,6 +158,13 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             locationProvider.removeLocationUpdates(locationCallback)
         }
         super.onStop()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menu?.let {
+            this.menu = it
+        }
+        return true
     }
 
     // endregion
