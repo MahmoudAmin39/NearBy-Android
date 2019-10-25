@@ -88,27 +88,31 @@ class NearByPlacesViewModel : ViewModel() {
 
                 override fun onResponse(call: Call<ResponseFromServer>, response: Response<ResponseFromServer>) {
                     when(response.body()) {
-                        null -> {showError(R.string.no_response, R.drawable.ic_cloud_off)}
-                        else -> { handleResponse(response.body())}
+                        null -> { showError(R.string.no_response, R.drawable.ic_cloud_off) }
+                        else -> { handleResponse(response)}
                     }
                 }
             })
     }
 
-    private fun handleResponse(response: ResponseFromServer?) {
-        response?.let {
-            val venues = ArrayList<Venue>()
-            it.response.groups[0].items.map { items: Map<String, Any> ->
-                val venue = items["venue"] as? Map<String, Any>
-                venue?.let{
-                    val venueObject =
-                        Venue(venue)
-                    venues.add(venueObject)
+    private fun handleResponse(response: Response<ResponseFromServer>) {
+        if (response.isSuccessful && response.code() == 200) {
+            response.body()?.let {
+                val venues = ArrayList<Venue>()
+                it.response.groups[0].items.map { items: Map<String, Any> ->
+                    val venue = items["venue"] as? Map<String, Any>
+                    venue?.let{
+                        val venueObject =
+                            Venue(venue)
+                        venues.add(venueObject)
+                    }
                 }
+                venuesData.value = venues
+                showListView()
+                return
             }
-            venuesData.value = venues
-            showListView()
-            return
+        } else {
+            showError(R.string.error_wrong, R.drawable.ic_cloud_off)
         }
     }
 

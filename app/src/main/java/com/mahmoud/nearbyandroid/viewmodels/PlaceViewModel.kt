@@ -23,16 +23,30 @@ class PlaceViewModel {
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)?.enqueue(object : Callback<PhotoResponseFromServer> {
             override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
+
             }
 
-            override fun onResponse(
-                call: Call<PhotoResponseFromServer>,
-                response: Response<PhotoResponseFromServer>
-            ) {
-                val photo = response.body()?.response?.photos!!.photoItems[0]
-                val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
-                imageUrl.value = imageUrlString
+            override fun onResponse(call: Call<PhotoResponseFromServer>, response: Response<PhotoResponseFromServer>) {
+                when(response.body()) {
+                    null -> {
+                        // TODO: Handle Error here
+                    }
+                    else -> { handleResponse(response) }
+                }
             }
         })
+    }
+
+    private fun handleResponse(response: Response<PhotoResponseFromServer>) {
+        if (response.isSuccessful && response.code() == 200) {
+            response.body()?.let {
+                val photo = it.response.photos.photoItems[0]
+                val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
+                imageUrl.value = imageUrlString
+                return
+            }
+        } else {
+            // TODO: Handle Error here
+        }
     }
 }
