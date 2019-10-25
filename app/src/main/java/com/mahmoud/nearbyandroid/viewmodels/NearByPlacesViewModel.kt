@@ -91,12 +91,12 @@ class NearByPlacesViewModel : ViewModel() {
                 }
 
                 override fun onResponse(call: Call<ResponseFromServer>, response: Response<ResponseFromServer>) {
+                    val venues = ArrayList<Venue>()
                     response.body()?.response!!.groups[0].items.map {
                         val venue = it["venue"] as? Map<String, Any>
                         venue?.let{
                             val venueObject = Venue(venue)
-                            Log.d("Mahmoud", venueObject!!.name)
-                            Log.d("Mahmoud", venueObject!!.location)
+                            venues.add(venueObject)
                         }
                     }
                 }
