@@ -16,41 +16,60 @@ class NearByPlacesViewModel : ViewModel() {
     private val networkInformation = NetworkInformation()
     private val locationInfoProvider = LocationInfoProvider()
 
+    // Errors
     val errorState: MutableLiveData<ErrorMessage?> = MutableLiveData(null)
+    val alertMessage: MutableLiveData<Int> = MutableLiveData(0)
 
-    val bodyVisbilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
-    val errorVisbilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
-    val progressVisbilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
+    // Visibility
+    val bodyVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
+    val errorVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
+    val progressVisibilityState: MutableLiveData<Int> = MutableLiveData(View.GONE)
 
+    // Broadcast receivers
+    val shouldReceiveLocationBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
+    val shouldReceiveNetworkBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
+
+    // region Location logic
     fun setLocationSentToServer(location: Location?) {
-        this.lastLocationSentToServer = location
-    }
-
-    fun checkLocation() {
-        if (!locationInfoProvider.isLocationEnabled()) {
-            // Show the Error view
-            showError(R.string.app_name, R.drawable.ic_launcher_foreground)
+        location?.let {
+            this.lastLocationSentToServer = location
+            if (!locationInfoProvider.isLocationEnabled()) {
+                // The last known location maybe not the current
+                alertMessage.value = R.string.no_location_snackbar
+                shouldReceiveLocationBroadCasts.value = true
+            }
+            return
         }
+        // Location is null
+        showError(R.string.no_location_error, R.drawable.ic_location_disabled)
+        shouldReceiveLocationBroadCasts.value = true
     }
 
+    // endregion
+
+
+
+    // region Visibility manipulators
     private fun showBody() {
-        progressVisbilityState.value = View.GONE
-        bodyVisbilityState.value = View.VISIBLE
-        errorVisbilityState.value = View.GONE
+        progressVisibilityState.value = View.GONE
+        bodyVisibilityState.value = View.VISIBLE
+        errorVisibilityState.value = View.GONE
     }
 
     private fun showProgress() {
-        progressVisbilityState.value = View.VISIBLE
-        bodyVisbilityState.value = View.GONE
-        errorVisbilityState.value = View.GONE
+        progressVisibilityState.value = View.VISIBLE
+        bodyVisibilityState.value = View.GONE
+        errorVisibilityState.value = View.GONE
     }
 
     private fun showError(errorMessage: Int, errorDrawable: Int) {
-        progressVisbilityState.value = View.GONE
-        bodyVisbilityState.value = View.GONE
-        errorVisbilityState.value = View.VISIBLE
+        progressVisibilityState.value = View.GONE
+        bodyVisibilityState.value = View.GONE
+        errorVisibilityState.value = View.VISIBLE
 
         errorState.value = ErrorMessage(errorBodyResource = errorMessage, errorDrawableResource = errorDrawable)
     }
+
+    //endregion
 
 }

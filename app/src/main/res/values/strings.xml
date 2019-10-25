@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">NearBy-Android</string>
     <string name="error_wrong">Something went wrong !!</string>
+    <string name="no_location_snackbar">For better experience, please enable location services.</string>
+    <string name="no_location_error">No location was found.</string>
+    <string name="recommendation">Recommendation</string>
+    <string name="ok">Ok</string>
 </resources>
