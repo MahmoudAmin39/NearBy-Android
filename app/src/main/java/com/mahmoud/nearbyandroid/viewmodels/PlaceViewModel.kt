@@ -14,6 +14,11 @@ class PlaceViewModel {
 
     val imageUrl = MutableLiveData("")
 
+    companion object {
+        const val IMAGE_WIDTH = 100
+        const val IMAGE_HEIGHT = 100
+    }
+
     fun getImageUrl(venueId: String) {
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)?.enqueue(object : Callback<PhotoResponseFromServer> {
@@ -25,7 +30,7 @@ class PlaceViewModel {
                 response: Response<PhotoResponseFromServer>
             ) {
                 val photo = response.body()?.response?.photos!!.photoItems[0]
-                val imageUrlString = String.format("%s100x100%s", photo.prefix, photo.suffix)
+                val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
                 imageUrl.value = imageUrlString
             }
         })
