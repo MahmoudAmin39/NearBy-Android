@@ -121,7 +121,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     }
 
     private fun getLocation() {
-        locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.setLocationSentToServer(location)}
+        locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.getPlaces(location)}
     }
 
     private fun getLocationUpdates() {
