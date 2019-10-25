@@ -73,7 +73,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        adapter = VenuesAdapter(ArrayList())
+        adapter = VenuesAdapter(this, ArrayList())
         recyclerView_places.layoutManager = LinearLayoutManager(this)
         recyclerView_places.adapter = adapter
 

@@ -11,8 +11,8 @@ import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_SECRET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.DATE_VERSION
 import com.mahmoud.nearbyandroid.data.models.AppModes
 import com.mahmoud.nearbyandroid.data.models.ErrorMessage
-import com.mahmoud.nearbyandroid.data.models.ResponseFromServer
-import com.mahmoud.nearbyandroid.data.models.Venue
+import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
+import com.mahmoud.nearbyandroid.data.models.venues.Venue
 import com.mahmoud.nearbyandroid.data.retrofit.RetrofitClient
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 import retrofit2.Call
@@ -94,7 +94,8 @@ class NearByPlacesViewModel : ViewModel() {
                     response.body()?.response!!.groups[0].items.map {
                         val venue = it["venue"] as? Map<String, Any>
                         venue?.let{
-                            val venueObject = Venue(venue)
+                            val venueObject =
+                                Venue(venue)
                             venues.add(venueObject)
                         }
                     }

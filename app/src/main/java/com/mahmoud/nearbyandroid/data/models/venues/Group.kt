@@ -1,4 +1,4 @@
-package com.mahmoud.nearbyandroid.data.models
+package com.mahmoud.nearbyandroid.data.models.venues
 
 import com.google.gson.annotations.SerializedName
 

@@ -1,4 +1,4 @@
-package com.mahmoud.nearbyandroid.data.models
+package com.mahmoud.nearbyandroid.data.models.venues
 
 data class Venue(val id: String?, val name: String?, val location: String?) {
 
