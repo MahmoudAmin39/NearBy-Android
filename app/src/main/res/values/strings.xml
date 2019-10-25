@@ -7,4 +7,5 @@
     <string name="ok">Ok</string>
     <string name="no_internet_error">No internet connection</string>
     <string name="realtime">Realtime</string>
+    <string name="no_response">No response from Server !!</string>
 </resources>

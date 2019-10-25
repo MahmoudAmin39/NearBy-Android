@@ -1,7 +1,6 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
 import android.location.Location
-import android.util.Log
 import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -79,31 +78,41 @@ class NearByPlacesViewModel : ViewModel() {
         val lat = currentLocation.latitude
         val long = currentLocation.longitude
         val latLong = String.format("%f,%f", lat, long)
-        RetrofitClient.getInstance().placesService?.getPlaces(
-            latLong,
-            CLIENT_ID,
-            CLIENT_SECRET, DATE_VERSION
-        )!!
-            .enqueue(object : Callback<ResponseFromServer> {
+        RetrofitClient.getInstance().placesService
+            ?.getPlaces(latLong, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
+            ?.enqueue(object : Callback<ResponseFromServer> {
+
                 override fun onFailure(call: Call<ResponseFromServer>, t: Throwable) {
-                    Log.d("Mahmoud", "Group")
+                    showError(R.string.error_wrong, R.drawable.ic_cloud_off)
                 }
 
                 override fun onResponse(call: Call<ResponseFromServer>, response: Response<ResponseFromServer>) {
-                    val venues = ArrayList<Venue>()
-                    response.body()?.response!!.groups[0].items.map {
-                        val venue = it["venue"] as? Map<String, Any>
-                        venue?.let{
-                            val venueObject =
-                                Venue(venue)
-                            venues.add(venueObject)
-                        }
+                    when(response.body()) {
+                        null -> {showError(R.string.no_response, R.drawable.ic_cloud_off)}
+                        else -> { handleResponse(response.body())}
                     }
-                    venuesData.value = venues
-                    showListView()
                 }
             })
     }
+
+    private fun handleResponse(response: ResponseFromServer?) {
+        response?.let {
+            val venues = ArrayList<Venue>()
+            it.response.groups[0].items.map { items: Map<String, Any> ->
+                val venue = items["venue"] as? Map<String, Any>
+                venue?.let{
+                    val venueObject =
+                        Venue(venue)
+                    venues.add(venueObject)
+                }
+            }
+            venuesData.value = venues
+            showListView()
+            return
+        }
+    }
+
+    // endregion
 
     // region Location logic
 
@@ -120,6 +129,7 @@ class NearByPlacesViewModel : ViewModel() {
     // endregion
 
     // region Visibility manipulators
+
     private fun showListView() {
         progressVisibilityState.value = View.GONE
         placesListVisibilityState.value = View.VISIBLE
