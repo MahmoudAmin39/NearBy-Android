@@ -15,6 +15,7 @@ class PlaceViewModel {
 
     val imageUrl = MutableLiveData("")
     val errorIcon = MutableLiveData(0)
+    val errorText = MutableLiveData("")
 
     companion object {
         const val IMAGE_WIDTH = 100
@@ -26,15 +27,11 @@ class PlaceViewModel {
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)?.enqueue(object : Callback<PhotoResponseFromServer> {
             override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
                 errorIcon.value = R.drawable.ic_error
+                errorText.value = t.localizedMessage
             }
 
             override fun onResponse(call: Call<PhotoResponseFromServer>, response: Response<PhotoResponseFromServer>) {
-                when(response.body()) {
-                    null -> {
-                        errorIcon.value = R.drawable.ic_error
-                    }
-                    else -> { handleResponse(response) }
-                }
+                handleResponse(response)
             }
         })
     }
@@ -49,6 +46,11 @@ class PlaceViewModel {
             }
         } else {
             errorIcon.value = R.drawable.ic_error
+            if (response.code() == 429) {
+                errorText.value = "Quota exceeded"
+            } else {
+                errorText.value = response.message()
+            }
         }
     }
 }

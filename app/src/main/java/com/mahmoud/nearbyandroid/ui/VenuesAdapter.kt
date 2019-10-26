@@ -1,5 +1,6 @@
 package com.mahmoud.nearbyandroid.ui
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,6 +62,13 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
             viewModel.errorIcon.observe(lifecycleOwner, Observer{ errorIcon ->
                 if (errorIcon != 0) {
                     venueImage.setImageResource(errorIcon)
+                }
+            })
+
+            // For testing
+            viewModel.errorText.observe(lifecycleOwner, Observer { errorMessage ->
+                if (errorMessage != "") {
+                    Log.e("Photo error", errorMessage)
                 }
             })
         }
