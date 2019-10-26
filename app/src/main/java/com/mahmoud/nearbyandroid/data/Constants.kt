@@ -12,5 +12,9 @@ class Constants {
 
         const val APPMODE_REALTIME = 1
         const val APPMODE_SINGLE_UPDATE = 2
+
+        const val ERROR_NO_LOCATION = 3
+        const val ERROR_NO_INTERNET = 4
+        const val ERROR_NO_RESPONSE = 5
     }
 }

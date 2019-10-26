@@ -21,6 +21,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_REALTIME
 import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_SINGLE_UPDATE
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_INTERNET
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_LOCATION
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_RESPONSE
 
 class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
@@ -69,7 +72,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         const val PERMISSION_LOCATION = 1
         const val CONNECTION_FAILURE_RESOLUTION_REQUEST = 2
         // The lower the interval, the better the accuracy
-        const val LOCATION_UPDATE_INTERVAL: Long = 1000 * 5/** 60 * 5*/
+        const val LOCATION_UPDATE_INTERVAL: Long = 1000 * 60/** 60 * 5*/
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,15 +90,17 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             placesListVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
 
             appMode.observe(this@NearByPlacesActivity, Observer { mode ->
-                when (mode) {
-                    APPMODE_REALTIME -> {
-                        menu?.findItem(R.id.menu_item)?.title = getString(R.string.realtime)
-                        getLocationUpdates()
-                    }
-                    APPMODE_SINGLE_UPDATE -> {
-                        menu?.findItem(R.id.menu_item)?.title = getString(R.string.single_update)
-                        getLocation()
-                        removeLocationUpdates()
+                mode?.let {
+                    when (mode) {
+                        APPMODE_REALTIME -> {
+                            menu?.findItem(R.id.menu_item)?.title = getString(R.string.single_update)
+                            getLocationUpdates()
+                        }
+                        APPMODE_SINGLE_UPDATE -> {
+                            menu?.findItem(R.id.menu_item)?.title = getString(R.string.realtime)
+                            getLocation()
+                            removeLocationUpdates()
+                        }
                     }
                 }
             })
@@ -107,6 +112,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             errorState.observe(this@NearByPlacesActivity, Observer { error -> error?.let {errorObject ->
                 imageView_error.setImageResource(errorObject.errorDrawableResource)
                 textView_error.text = resources.getString(errorObject.errorBodyResource)
+                when(errorObject.errorCode) {
+                    ERROR_NO_LOCATION -> button_error.setOnClickListener { getLocation() }
+                    ERROR_NO_INTERNET, ERROR_NO_RESPONSE -> button_error.setOnClickListener { loadPlaces() }
+                }
             } })
 
             // Broadcast Listening

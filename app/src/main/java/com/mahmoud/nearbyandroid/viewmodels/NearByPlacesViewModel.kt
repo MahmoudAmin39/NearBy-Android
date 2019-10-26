@@ -14,6 +14,9 @@ import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_SINGLE_UPDATE
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_SECRET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.DATE_VERSION
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_INTERNET
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_LOCATION
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_RESPONSE
 import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
@@ -27,7 +30,6 @@ class NearByPlacesViewModel : ViewModel() {
 
     private var lastLocationSentToServer: Location? = null
     private val sharedPrefs = NearByApp.appContext?.getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE)
-    private val networkInformation = NetworkInformation()
     companion object {
         const val METERS_THRESHOLD = 500
     }
@@ -47,7 +49,7 @@ class NearByPlacesViewModel : ViewModel() {
     val shouldReceiveLocationBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
 
     // Menu items
-    val appMode: MutableLiveData<Int> = MutableLiveData(APPMODE_REALTIME)
+    val appMode: MutableLiveData<Int?> = MutableLiveData(null)
 
     // region App Mode logic
 
@@ -72,13 +74,18 @@ class NearByPlacesViewModel : ViewModel() {
     // region Places logic
 
     private fun loadPlaces(currentLocation: Location) {
-        when(networkInformation.isInternetConnected()) {
-            false -> { showError(R.string.no_internet_error, R.drawable.ic_cloud_off) }
+        when(NetworkInformation().isInternetConnected()) {
+            false -> { showError(R.string.no_internet_error, R.drawable.ic_cloud_off, ERROR_NO_INTERNET) }
             else -> { getPlacesFromServer(currentLocation)}
         }
     }
 
+    fun loadPlaces() {
+        lastLocationSentToServer?.let { loadPlaces(it) }
+    }
+
     private fun getPlacesFromServer(currentLocation: Location) {
+        showProgress()
         val lat = currentLocation.latitude
         val long = currentLocation.longitude
         val latLong = String.format("%f,%f", lat, long)
@@ -87,12 +94,12 @@ class NearByPlacesViewModel : ViewModel() {
             ?.enqueue(object : Callback<ResponseFromServer> {
 
                 override fun onFailure(call: Call<ResponseFromServer>, t: Throwable) {
-                    showError(R.string.error_wrong, R.drawable.ic_cloud_off)
+                    showError(R.string.error_wrong, R.drawable.ic_cloud_off, ERROR_NO_RESPONSE)
                 }
 
                 override fun onResponse(call: Call<ResponseFromServer>, response: Response<ResponseFromServer>) {
                     when(response.body()) {
-                        null -> { showError(R.string.no_response, R.drawable.ic_cloud_off) }
+                        null -> { showError(R.string.no_response, R.drawable.ic_cloud_off, ERROR_NO_RESPONSE) }
                         else -> { handleResponse(response)}
                     }
                 }
@@ -116,7 +123,7 @@ class NearByPlacesViewModel : ViewModel() {
                 return
             }
         } else {
-            showError(R.string.error_wrong, R.drawable.ic_cloud_off)
+            showError(R.string.error_wrong, R.drawable.ic_cloud_off, ERROR_NO_RESPONSE)
         }
     }
 
@@ -140,7 +147,7 @@ class NearByPlacesViewModel : ViewModel() {
             return
         }
 
-        showError(R.string.no_location_error, R.drawable.ic_location_disabled)
+        showError(R.string.no_location_error, R.drawable.ic_location_disabled, ERROR_NO_LOCATION)
     }
 
     // endregion
@@ -159,12 +166,12 @@ class NearByPlacesViewModel : ViewModel() {
         errorVisibilityState.value = View.GONE
     }
 
-    private fun showError(errorMessage: Int, errorDrawable: Int) {
+    private fun showError(errorMessage: Int, errorDrawable: Int, errorCode: Int) {
         progressVisibilityState.value = View.GONE
         placesListVisibilityState.value = View.GONE
         errorVisibilityState.value = View.VISIBLE
 
-        errorState.value = ErrorMessage(errorBodyResource = errorMessage, errorDrawableResource = errorDrawable)
+        errorState.value = ErrorMessage(errorBodyResource = errorMessage, errorDrawableResource = errorDrawable, errorCode = errorCode)
     }
 
     //endregion
