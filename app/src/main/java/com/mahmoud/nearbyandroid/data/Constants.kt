@@ -16,5 +16,7 @@ class Constants {
         const val ERROR_NO_LOCATION = 3
         const val ERROR_NO_INTERNET = 4
         const val ERROR_NO_RESPONSE = 5
+        const val ERROR_PERMISSION_DENIED = 6
+        const val ERROR_GOOGLE_PLAY_CONNECTION_FAILED = 7
     }
 }

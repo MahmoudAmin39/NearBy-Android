@@ -49,6 +49,7 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
             venueName.text = venue.name ?: "Venue name here"
             venueAddress.text = venue.location ?: "Venue address here"
 
+            // Sometimes the scrolling was not smooth so moved the the request to a new runnable
             venueImage.post { viewModel.getImageUrl(venue.id!!) }
 
             viewModel.imageUrl.observe(lifecycleOwner, Observer { imageUrl ->

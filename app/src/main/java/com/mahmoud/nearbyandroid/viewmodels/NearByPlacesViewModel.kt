@@ -14,9 +14,11 @@ import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_SINGLE_UPDATE
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_SECRET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.DATE_VERSION
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_GOOGLE_PLAY_CONNECTION_FAILED
 import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_INTERNET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_LOCATION
 import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_RESPONSE
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_PERMISSION_DENIED
 import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
@@ -31,6 +33,7 @@ class NearByPlacesViewModel : ViewModel() {
 
     private var lastLocationSentToServer: Location? = null
     private val sharedPrefs = NearByApp.appContext?.getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE)
+
     companion object {
         const val METERS_THRESHOLD = 500
     }
@@ -46,11 +49,9 @@ class NearByPlacesViewModel : ViewModel() {
     // Data
     val venuesData: MutableLiveData<ArrayList<Venue>> = MutableLiveData(ArrayList())
 
-    // Broadcast receivers
-    val shouldReceiveLocationBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
-
-    // Menu items
+    // App mode
     val appMode: MutableLiveData<Int?> = MutableLiveData(null)
+
 
     // region App Mode logic
 
@@ -71,6 +72,8 @@ class NearByPlacesViewModel : ViewModel() {
 
         setAppMode()
     }
+
+    // endregion
 
     // region Places logic
 
@@ -158,6 +161,18 @@ class NearByPlacesViewModel : ViewModel() {
                 showError(R.string.no_internet_error, R.drawable.ic_cloud_off, ERROR_NO_INTERNET)
             }
         }
+    }
+
+    // endregion
+
+    // region Error callbacks
+
+    fun onPermissionDenied() {
+        showError(R.string.error_permission_access, R.drawable.ic_location_disabled, ERROR_PERMISSION_DENIED)
+    }
+
+    fun onConnectionToGooglePlayFailed() {
+        showError(R.string.error_wrong, R.drawable.ic_cloud_off, ERROR_GOOGLE_PLAY_CONNECTION_FAILED)
     }
 
     // endregion

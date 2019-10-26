@@ -21,9 +21,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_REALTIME
 import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_SINGLE_UPDATE
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_GOOGLE_PLAY_CONNECTION_FAILED
 import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_INTERNET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_LOCATION
 import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_NO_RESPONSE
+import com.mahmoud.nearbyandroid.data.Constants.Companion.ERROR_PERMISSION_DENIED
 
 class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
@@ -115,15 +117,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 when(errorObject.errorCode) {
                     ERROR_NO_LOCATION -> button_error.setOnClickListener { getLocation() }
                     ERROR_NO_INTERNET, ERROR_NO_RESPONSE -> button_error.setOnClickListener { loadPlaces() }
+                    ERROR_PERMISSION_DENIED -> button_error.setOnClickListener { checkPermission() }
+                    ERROR_GOOGLE_PLAY_CONNECTION_FAILED -> button_error.setOnClickListener { googleApiClient.connect() }
                 }
             } })
-
-            // Broadcast Listening
-            shouldReceiveLocationBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
-                if (should) {
-                    // TODO: Start Receiving Location changes
-                }
-            })
         }
     }
 
@@ -147,7 +144,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                     viewModel.getAppMode()
                 } else {
                     // permission denied
-                    // TODO: Send the view model that permission was denied
+                    viewModel.onPermissionDenied()
                 }
             }
         }
@@ -188,6 +185,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     // region GoogleApiClient implement
 
     override fun onConnected(p0: Bundle?) {
+        checkPermission()
+    }
+
+    private fun checkPermission() {
         // Runtime permission check
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -201,7 +202,9 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         }
     }
 
-    override fun onConnectionSuspended(p0: Int) {}
+    override fun onConnectionSuspended(p0: Int) {
+        viewModel.onConnectionToGooglePlayFailed()
+    }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
         if (p0.hasResolution()) {
@@ -214,7 +217,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 e.printStackTrace()
             }
         } else {
-            // TODO: Send the view model that Failed connection with Google APIs
+            viewModel.onConnectionToGooglePlayFailed()
         }
     }
 
