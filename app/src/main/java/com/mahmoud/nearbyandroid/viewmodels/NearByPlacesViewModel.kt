@@ -136,7 +136,11 @@ class NearByPlacesViewModel : ViewModel() {
                     loadPlaces(currentLocation)
                 }
             }
+
+            return
         }
+
+        showError(R.string.no_location_error, R.drawable.ic_location_disabled)
     }
 
     // endregion

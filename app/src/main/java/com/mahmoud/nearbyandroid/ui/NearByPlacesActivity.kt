@@ -62,7 +62,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         }
     }
 
-    private lateinit var menu: Menu
+    private var menu: Menu? = null
     private lateinit var adapter: VenuesAdapter
 
     companion object {
@@ -86,24 +86,19 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             errorVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> errorView.visibility = state })
             placesListVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
 
-            // Observe the App mode
             appMode.observe(this@NearByPlacesActivity, Observer { mode ->
-                when(mode) {
+                when (mode) {
                     APPMODE_REALTIME -> {
-                        menu.findItem(R.id.menu_item).title = getString(R.string.realtime)
+                        menu?.findItem(R.id.menu_item)?.title = getString(R.string.realtime)
                         getLocationUpdates()
                     }
                     APPMODE_SINGLE_UPDATE -> {
-                        menu.findItem(R.id.menu_item).title = getString(R.string.single_update)
-                        // For first launch
-                        if (!googleApiClient.isConnected) {
-                            googleApiClient.connect()
-                        }
+                        menu?.findItem(R.id.menu_item)?.title = getString(R.string.single_update)
+                        getLocation()
                         removeLocationUpdates()
                     }
                 }
             })
-            getAppMode()
 
             // Observe data
             venuesData.observe(this@NearByPlacesActivity, Observer { venues -> adapter.addVenues(venues) })
@@ -128,6 +123,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     }
 
     private fun getLocationUpdates() {
+        getLocation()
         locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
@@ -139,7 +135,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted
-                    getLocation()
+                    viewModel.getAppMode()
                 } else {
                     // permission denied
                     // TODO: Send the view model that permission was denied
@@ -148,11 +144,16 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        googleApiClient.connect()
+    }
+
     override fun onStop() {
         if (googleApiClient.isConnected) {
             googleApiClient.disconnect()
         }
-
+        removeLocationUpdates()
         super.onStop()
     }
 
@@ -163,9 +164,8 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menu?.let {
-            this.menu = it
-        }
+        menuInflater.inflate(R.menu.menu_main, menu)
+        menu?.let { this.menu = it }
         return true
     }
 
@@ -188,7 +188,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             )
         } else {
             // Permission has already been granted
-            getLocation()
+            viewModel.getAppMode()
         }
     }
 
