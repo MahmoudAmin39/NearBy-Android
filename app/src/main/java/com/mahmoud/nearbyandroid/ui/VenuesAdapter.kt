@@ -49,7 +49,7 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
             venueName.text = venue.name ?: "Venue name here"
             venueAddress.text = venue.location ?: "Venue address here"
 
-            viewModel.getImageUrl(venue.id!!)
+            venueImage.post { viewModel.getImageUrl(venue.id!!) }
 
             viewModel.imageUrl.observe(lifecycleOwner, Observer { imageUrl ->
                 if (imageUrl != "") {

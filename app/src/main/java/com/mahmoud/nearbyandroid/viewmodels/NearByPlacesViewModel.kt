@@ -21,6 +21,7 @@ import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
 import com.mahmoud.nearbyandroid.data.retrofit.RetrofitClient
+import com.mahmoud.nearbyandroid.helpers.LocationInformation
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 import retrofit2.Call
 import retrofit2.Callback
@@ -147,7 +148,16 @@ class NearByPlacesViewModel : ViewModel() {
             return
         }
 
-        showError(R.string.no_location_error, R.drawable.ic_location_disabled, ERROR_NO_LOCATION)
+        // Location is null
+        if (!LocationInformation().isGPSAvailable()) {
+            // GPS is disabled
+            showError(R.string.no_location_error, R.drawable.ic_location_disabled, ERROR_NO_LOCATION)
+        } else {
+            // GPS is enabled
+            if (!NetworkInformation().isInternetConnected()) {
+                showError(R.string.no_internet_error, R.drawable.ic_cloud_off, ERROR_NO_INTERNET)
+            }
+        }
     }
 
     // endregion
