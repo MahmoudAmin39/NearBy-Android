@@ -52,10 +52,32 @@ class NearByPlacesViewModel : ViewModel() {
     // App mode
     val appMode: MutableLiveData<Int?> = MutableLiveData(null)
 
+    // region checkInternet
+
+    fun checkConditions() {
+        // 1) Check internet
+        if (!NetworkInformation().isInternetConnected()) {
+            // Internet is not available
+            showError(R.string.no_internet_error, R.drawable.ic_cloud_off, ERROR_NO_INTERNET)
+        } else {
+            // Internet is available
+            // 2) Check GPS
+            if (LocationInformation().isGPSAvailable()) {
+                // GPS Available
+                getAppMode()
+            } else {
+                // GPS is not available
+                showError(R.string.no_location_error, R.drawable.ic_location_disabled, ERROR_NO_LOCATION)
+            }
+        }
+    }
+
+    // endregion
+
 
     // region App Mode logic
 
-    fun getAppMode() {
+    private fun getAppMode() {
         appMode.value = sharedPrefs?.getInt(Constants.APP_MODE, APPMODE_REALTIME) ?: APPMODE_REALTIME
     }
 
@@ -79,7 +101,7 @@ class NearByPlacesViewModel : ViewModel() {
 
     private fun loadPlaces(currentLocation: Location) {
         when(NetworkInformation().isInternetConnected()) {
-            false -> { showError(R.string.no_internet_error, R.drawable.ic_cloud_off, ERROR_NO_INTERNET) }
+            false -> {  }
             else -> { getPlacesFromServer(currentLocation)}
         }
     }
@@ -137,6 +159,7 @@ class NearByPlacesViewModel : ViewModel() {
 
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
+            // The first location sent to the view model
             if (lastLocationSentToServer == null) {
                 this.lastLocationSentToServer = currentLocation
                 loadPlaces(currentLocation)
@@ -151,7 +174,7 @@ class NearByPlacesViewModel : ViewModel() {
             return
         }
 
-        // Location is null
+        // Location is null for any reasons
         if (!LocationInformation().isGPSAvailable()) {
             // GPS is disabled
             showError(R.string.no_location_error, R.drawable.ic_location_disabled, ERROR_NO_LOCATION)

@@ -96,14 +96,13 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                     when (mode) {
                         APPMODE_REALTIME -> {
                             menu?.findItem(R.id.menu_item)?.title = getString(R.string.single_update)
-                            getLocationUpdates()
                         }
                         APPMODE_SINGLE_UPDATE -> {
                             menu?.findItem(R.id.menu_item)?.title = getString(R.string.realtime)
-                            getLocation()
                             removeLocationUpdates()
                         }
                     }
+                    checkPermission(it)
                 }
             })
 
@@ -115,9 +114,9 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 imageView_error.setImageResource(errorObject.errorDrawableResource)
                 textView_error.text = resources.getString(errorObject.errorBodyResource)
                 when(errorObject.errorCode) {
-                    ERROR_NO_LOCATION -> button_error.setOnClickListener { getLocation() }
-                    ERROR_NO_INTERNET, ERROR_NO_RESPONSE -> button_error.setOnClickListener { loadPlaces() }
-                    ERROR_PERMISSION_DENIED -> button_error.setOnClickListener { checkPermission() }
+                    ERROR_NO_LOCATION, ERROR_NO_INTERNET -> button_error.setOnClickListener { viewModel.checkConditions() }
+                    ERROR_NO_RESPONSE -> button_error.setOnClickListener { loadPlaces() }
+                    ERROR_PERMISSION_DENIED -> button_error.setOnClickListener { checkPermission(viewModel.appMode.value) }
                     ERROR_GOOGLE_PLAY_CONNECTION_FAILED -> button_error.setOnClickListener { googleApiClient.connect() }
                 }
             } })
@@ -141,7 +140,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted
-                    viewModel.getAppMode()
+                    viewModel.checkConditions()
                 } else {
                     // permission denied
                     viewModel.onPermissionDenied()
@@ -185,10 +184,10 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
     // region GoogleApiClient implement
 
     override fun onConnected(p0: Bundle?) {
-        checkPermission()
+        viewModel.checkConditions()
     }
 
-    private fun checkPermission() {
+    private fun checkPermission(appMode: Int?) {
         // Runtime permission check
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -198,7 +197,12 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
             )
         } else {
             // Permission has already been granted
-            viewModel.getAppMode()
+            appMode?.let {
+                when(it) {
+                    APPMODE_REALTIME -> getLocationUpdates()
+                    APPMODE_SINGLE_UPDATE -> getLocation()
+                }
+            }
         }
     }
 
