@@ -9,5 +9,8 @@ class Constants {
         const val DATE_VERSION = "20200101"
         const val SHARED_PREFS = "NearBy Data"
         const val APP_MODE = "App_Mode"
+
+        const val APPMODE_REALTIME = 1
+        const val APPMODE_SINGLE_UPDATE = 2
     }
 }

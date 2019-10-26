@@ -16,8 +16,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 import android.content.IntentSender
 import android.os.Looper
 import android.view.Menu
+import android.view.MenuItem
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.mahmoud.nearbyandroid.R
+import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_REALTIME
+import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_SINGLE_UPDATE
 
 class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
@@ -66,7 +69,7 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         const val PERMISSION_LOCATION = 1
         const val CONNECTION_FAILURE_RESOLUTION_REQUEST = 2
         // The lower the interval, the better the accuracy
-        const val LOCATION_UPDATE_INTERVAL: Long = 1000 * 10/** 60 * 5*/
+        const val LOCATION_UPDATE_INTERVAL: Long = 1000 * 5/** 60 * 5*/
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,9 +81,29 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         recyclerView_places.adapter = adapter
 
         with(viewModel) {
+            // Observe the visibility manipulation
             progressVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> progressBar.visibility = state })
             errorVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> errorView.visibility = state })
             placesListVisibilityState.observe(this@NearByPlacesActivity, Observer { state -> recyclerView_places.visibility = state })
+
+            // Observe the App mode
+            appMode.observe(this@NearByPlacesActivity, Observer { mode ->
+                when(mode) {
+                    APPMODE_REALTIME -> {
+                        menu.findItem(R.id.menu_item).title = getString(R.string.realtime)
+                        getLocationUpdates()
+                    }
+                    APPMODE_SINGLE_UPDATE -> {
+                        menu.findItem(R.id.menu_item).title = getString(R.string.single_update)
+                        // For first launch
+                        if (!googleApiClient.isConnected) {
+                            googleApiClient.connect()
+                        }
+                        removeLocationUpdates()
+                    }
+                }
+            })
+            getAppMode()
 
             // Observe data
             venuesData.observe(this@NearByPlacesActivity, Observer { venues -> adapter.addVenues(venues) })
@@ -97,21 +120,11 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
                     // TODO: Start Receiving Location changes
                 }
             })
-            shouldReceiveNetworkBroadCasts.observe(this@NearByPlacesActivity, Observer { should ->
-                if (should) {
-                    // TODO: Start Receiving Networking changes
-                }
-            })
-            shouldStartLocationUpdate.observe(this@NearByPlacesActivity, Observer { should ->
-                if (should) {
-                    getLocationUpdates()
-                }
-            })
         }
     }
 
     private fun getLocation() {
-        locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.getPlaces(location)}
+        locationProvider.lastLocation.addOnSuccessListener { location -> viewModel.setCurrentUserLocation(location)}
     }
 
     private fun getLocationUpdates() {
@@ -135,26 +148,29 @@ class NearByPlacesActivity : AppCompatActivity(), GoogleApiClient.ConnectionCall
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        googleApiClient.connect()
-    }
-
     override fun onStop() {
         if (googleApiClient.isConnected) {
             googleApiClient.disconnect()
         }
 
+        super.onStop()
+    }
+
+    private fun removeLocationUpdates() {
         if (locationCallback != null) {
             locationProvider.removeLocationUpdates(locationCallback)
         }
-        super.onStop()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menu?.let {
             this.menu = it
         }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        viewModel.onMenuItemClicked()
         return true
     }
 

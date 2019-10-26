@@ -1,14 +1,19 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
+import android.content.Context.MODE_PRIVATE
 import android.location.Location
 import android.view.View
+import androidx.core.content.edit
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.mahmoud.nearbyandroid.NearByApp
 import com.mahmoud.nearbyandroid.R
+import com.mahmoud.nearbyandroid.data.Constants
+import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_REALTIME
+import com.mahmoud.nearbyandroid.data.Constants.Companion.APPMODE_SINGLE_UPDATE
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_SECRET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.DATE_VERSION
-import com.mahmoud.nearbyandroid.data.models.AppModes
 import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
@@ -21,9 +26,8 @@ import retrofit2.Response
 class NearByPlacesViewModel : ViewModel() {
 
     private var lastLocationSentToServer: Location? = null
-
+    private val sharedPrefs = NearByApp.appContext?.getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE)
     private val networkInformation = NetworkInformation()
-    private var appMode: AppModes = AppModes.Realtime
     companion object {
         const val METERS_THRESHOLD = 500
     }
@@ -41,40 +45,40 @@ class NearByPlacesViewModel : ViewModel() {
 
     // Broadcast receivers
     val shouldReceiveLocationBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
-    val shouldReceiveNetworkBroadCasts: MutableLiveData<Boolean> = MutableLiveData(false)
-    val shouldStartLocationUpdate: MutableLiveData<Boolean> = MutableLiveData(false)
 
     // Menu items
-    val menuItemTitle: MutableLiveData<Int> = MutableLiveData(R.string.realtime)
+    val appMode: MutableLiveData<Int> = MutableLiveData(APPMODE_REALTIME)
 
-    // region Places logic
-    fun getPlaces(location: Location?) {
-        showProgress()
-        location?.let {currentLocation ->
-            // Location is not null
-            when(networkInformation.isInternetConnected()) {
-                false -> {
-                    showError(R.string.no_internet_error, R.drawable.ic_cloud_off)
-                    shouldReceiveNetworkBroadCasts.value = true
-                }
-                else -> {
-                    // Internet is available
-                    loadPlaces(currentLocation)
-                }
-            }
-            return
+    // region App Mode logic
+
+    fun getAppMode() {
+        appMode.value = sharedPrefs?.getInt(Constants.APP_MODE, APPMODE_REALTIME) ?: APPMODE_REALTIME
+    }
+
+    private fun setAppMode() {
+        sharedPrefs?.edit { putInt(Constants.APP_MODE, appMode.value!!) }
+    }
+
+    fun onMenuItemClicked() {
+        appMode.value = if (appMode.value == APPMODE_REALTIME) {
+            APPMODE_SINGLE_UPDATE
+        } else {
+            APPMODE_REALTIME
         }
 
-        // Location is null
-        showError(R.string.no_location_error, R.drawable.ic_location_disabled)
-        if (appMode == AppModes.SingleUpdate) {
-            shouldReceiveLocationBroadCasts.value = true
-        } else {
-            shouldStartLocationUpdate.value = true
+        setAppMode()
+    }
+
+    // region Places logic
+
+    private fun loadPlaces(currentLocation: Location) {
+        when(networkInformation.isInternetConnected()) {
+            false -> { showError(R.string.no_internet_error, R.drawable.ic_cloud_off) }
+            else -> { getPlacesFromServer(currentLocation)}
         }
     }
 
-    private fun loadPlaces(currentLocation: Location) {
+    private fun getPlacesFromServer(currentLocation: Location) {
         val lat = currentLocation.latitude
         val long = currentLocation.longitude
         val latLong = String.format("%f,%f", lat, long)
@@ -123,7 +127,6 @@ class NearByPlacesViewModel : ViewModel() {
     fun setCurrentUserLocation(location: Location?) {
         location?.let { currentLocation ->
             if (lastLocationSentToServer == null) {
-                // The user opened the GPS after launching the app
                 this.lastLocationSentToServer = currentLocation
                 loadPlaces(currentLocation)
             } else {
