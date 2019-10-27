@@ -1,6 +1,5 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
@@ -27,10 +26,6 @@ class PlaceViewModel {
 
     fun getImageUrl(venueId: String) {
         this.venueId = venueId
-/*        // Get it from database first
-        val asyncTask = RoomAsyncTask(this)
-        asyncTask.execute(venueId)*/
-        Log.d("Mahmoud", "Sending request")
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
             ?.enqueue(object : Callback<PhotoResponseFromServer> {
@@ -43,7 +38,6 @@ class PlaceViewModel {
                     call: Call<PhotoResponseFromServer>,
                     response: Response<PhotoResponseFromServer>
                 ) {
-                    Log.d("Mahmoud", call.request().url().toString())
                     handleResponse(response)
                 }
             })
