@@ -39,9 +39,11 @@ class PlaceViewModel {
     private fun handleResponse(response: Response<PhotoResponseFromServer>) {
         if (response.isSuccessful && response.code() == 200) {
             response.body()?.let {
-                val photo = it.response.photos.photoItems[0]
-                val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
-                imageUrl.value = imageUrlString
+                if (it.response.photos.photoItems.isNotEmpty()) {
+                    val photo = it.response.photos.photoItems[0]
+                    val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
+                    imageUrl.value = imageUrlString
+                }
                 return
             }
         } else {
