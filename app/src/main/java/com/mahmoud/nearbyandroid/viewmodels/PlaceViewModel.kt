@@ -23,18 +23,6 @@ class PlaceViewModel {
     companion object {
         const val IMAGE_WIDTH = 100
         const val IMAGE_HEIGHT = 100
-
-/*        // Static class not to leak memory
-        class RoomAsyncTask(private val callback: PhotoUrlCallback) : AsyncTask<String, Void, String?>() {
-
-            override fun doInBackground(vararg venueId: String): String? {
-                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())?.value
-            }
-
-            override fun onPostExecute(photoUrl: String?) {
-                callback.onPhotoUrlReady(photoUrl)
-            }
-        }*/
     }
 
     fun getImageUrl(venueId: String) {
@@ -42,6 +30,7 @@ class PlaceViewModel {
 /*        // Get it from database first
         val asyncTask = RoomAsyncTask(this)
         asyncTask.execute(venueId)*/
+        Log.d("Mahmoud", "Sending request")
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
             ?.enqueue(object : Callback<PhotoResponseFromServer> {
@@ -92,5 +81,3 @@ class PlaceViewModel {
         }
     }
 }
-
-//interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?) }

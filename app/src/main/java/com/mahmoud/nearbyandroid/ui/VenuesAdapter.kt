@@ -44,7 +44,7 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
             venueName.text = venue.name ?: "Venue name here"
             venueAddress.text = venue.location ?: "Venue address here"
 
-            RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venue.id!!)?.observe(lifecycleOwner, Observer { imageUrl ->
+            RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrlLiveData(venueId = venue.id!!)?.observe(lifecycleOwner, Observer { imageUrl ->
                 imageUrl?.let {
                     if (imageUrl != "") {
                         Glide.with(itemView.context).load(imageUrl).into(venueImage)

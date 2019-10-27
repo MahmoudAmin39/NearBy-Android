@@ -2,6 +2,7 @@ package com.mahmoud.nearbyandroid.viewmodels
 
 import android.content.Context.MODE_PRIVATE
 import android.location.Location
+import android.os.AsyncTask
 import android.view.View
 import androidx.core.content.edit
 import androidx.lifecycle.MutableLiveData
@@ -30,13 +31,28 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class NearByPlacesViewModel : ViewModel() {
+class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
 
     private var lastLocationSentToServer: Location? = null
     private val sharedPrefs = NearByApp.appContext?.getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE)
 
     companion object {
         const val METERS_THRESHOLD = 500
+
+        // Static class not to leak memory
+        class RoomAsyncTask(private val callback: PhotoUrlCallback) : AsyncTask<String, Void, String?>() {
+
+            private lateinit var venueId: String
+
+            override fun doInBackground(vararg venueId: String): String? {
+                this.venueId = venueId.first()
+                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())
+            }
+
+            override fun onPostExecute(photoUrl: String?) {
+                callback.onPhotoUrlReady(photoUrl, venueId)
+            }
+        }
     }
 
     // Errors
@@ -144,11 +160,8 @@ class NearByPlacesViewModel : ViewModel() {
                             Venue(venue)
                         venues.add(venueObject)
                         // Get the Photo url from database
-                        val imageUrl = RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueObject.id!!)?.value
-                        if (imageUrl == null) {
-                            // Send a request to get the PhotoUrl
-                            PlaceViewModel().getImageUrl(venueObject.id!!)
-                        }
+                        val task = RoomAsyncTask(this)
+                        task.execute(venueObject.id!!)
                     }
                 }
                 venuesData.value = venues
@@ -157,6 +170,13 @@ class NearByPlacesViewModel : ViewModel() {
             }
         } else {
             showError(R.string.error_wrong, R.drawable.ic_cloud_off, ERROR_NO_RESPONSE)
+        }
+    }
+
+    override fun onPhotoUrlReady(photoUrl: String?, venueId: String) {
+        if (photoUrl == null) {
+            val placeViewModel = PlaceViewModel()
+            placeViewModel.getImageUrl(venueId)
         }
     }
 
@@ -230,5 +250,6 @@ class NearByPlacesViewModel : ViewModel() {
     }
 
     //endregion
-
 }
+
+interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?, venueId: String) }
