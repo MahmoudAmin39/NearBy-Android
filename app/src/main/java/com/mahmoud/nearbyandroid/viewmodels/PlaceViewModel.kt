@@ -51,8 +51,12 @@ class PlaceViewModel : PhotoUrlCallback {
                 if (it.response.photos.photoItems.isNotEmpty()) {
                     val photo = it.response.photos.photoItems[0]
                     val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
+
+                    // Save the URL to Database for future queries
                     val photoUrl = PhotoUrl(venueId, imageUrlString)
                     RoomClient.getInstance().databaseInstance?.photoUrlDao()?.insertPhotoUrl(photoUrl)
+
+                    // Post the url back to the view holder
                     imageUrl.value = imageUrlString
                 }
                 return
@@ -70,7 +74,7 @@ class PlaceViewModel : PhotoUrlCallback {
     override fun onPhotoUrlReady(photoUrl: String?) {
         photoUrl?.let { imageUrl.value = it; return }
 
-        // PhotoUrl is null
+        // PhotoUrl is null (Not in the database yet -> Send request)
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)?.enqueue(object : Callback<PhotoResponseFromServer> {
             override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
