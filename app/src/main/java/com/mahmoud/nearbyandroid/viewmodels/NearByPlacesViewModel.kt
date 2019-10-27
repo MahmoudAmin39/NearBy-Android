@@ -23,6 +23,7 @@ import com.mahmoud.nearbyandroid.data.models.ErrorMessage
 import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
 import com.mahmoud.nearbyandroid.data.retrofit.RetrofitClient
+import com.mahmoud.nearbyandroid.data.room.RoomClient
 import com.mahmoud.nearbyandroid.helpers.LocationInformation
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 import retrofit2.Call
@@ -142,6 +143,12 @@ class NearByPlacesViewModel : ViewModel() {
                         val venueObject =
                             Venue(venue)
                         venues.add(venueObject)
+                        // Get the Photo url from database
+                        val imageUrl = RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueObject.id!!)?.value
+                        if (imageUrl == null) {
+                            // Send a request to get the PhotoUrl
+                            PlaceViewModel().getImageUrl(venueObject.id!!)
+                        }
                     }
                 }
                 venuesData.value = venues

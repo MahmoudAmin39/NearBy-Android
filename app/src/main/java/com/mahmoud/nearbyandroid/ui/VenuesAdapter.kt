@@ -1,6 +1,5 @@
 package com.mahmoud.nearbyandroid.ui
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
-import com.mahmoud.nearbyandroid.viewmodels.PlaceViewModel
+import com.mahmoud.nearbyandroid.data.room.RoomClient
 
 class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venues: ArrayList<Venue>) : RecyclerView.Adapter<VenuesAdapter.VenueViewHolder>() {
 
@@ -26,7 +25,6 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
     }
 
     override fun onBindViewHolder(holder: VenueViewHolder, position: Int) {
-
         holder.bindViews(venues[position], lifecycleOwner)
     }
 
@@ -42,30 +40,16 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
         private var venueName: TextView = v.findViewById(R.id.textView_venue_name)
         private var venueAddress: TextView = v.findViewById(R.id.textView_venue_address)
 
-        private val viewModel = PlaceViewModel()
-
         fun bindViews(venue: Venue, lifecycleOwner: LifecycleOwner) {
             venueName.text = venue.name ?: "Venue name here"
             venueAddress.text = venue.location ?: "Venue address here"
 
-            viewModel.getImageUrl(venue.id!!)
-
-            viewModel.imageUrl.observe(lifecycleOwner, Observer { imageUrl ->
-                if (imageUrl != "") {
-                    Glide.with(itemView.context).load(imageUrl).into(venueImage)
-                }
-            })
-
-            viewModel.errorIcon.observe(lifecycleOwner, Observer{ errorIcon ->
-                if (errorIcon != 0) {
-                    venueImage.setImageResource(errorIcon)
-                }
-            })
-
-            // For testing
-            viewModel.errorText.observe(lifecycleOwner, Observer { errorMessage ->
-                if (errorMessage != "") {
-                    Log.e("Photo error", errorMessage)
+            RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venue.id!!)?.observe(lifecycleOwner, Observer { imageUrl ->
+                imageUrl?.let {
+                    if (imageUrl != "") {
+                        Glide.with(itemView.context).load(imageUrl).into(venueImage)
+                    }
+                    return@let
                 }
             })
         }

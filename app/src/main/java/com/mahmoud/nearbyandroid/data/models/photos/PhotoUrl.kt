@@ -1,5 +1,6 @@
 package com.mahmoud.nearbyandroid.data.models.photos
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 
 @Entity
@@ -12,5 +13,5 @@ interface PhotoDao {
     fun insertPhotoUrl(photoUrl: PhotoUrl)
 
     @Query("select photoUrl from PhotoUrl where venueId like :venueId")
-    fun getPhotoUrl(venueId: String) : String?
+    fun getPhotoUrl(venueId: String) : LiveData<String?>
 }

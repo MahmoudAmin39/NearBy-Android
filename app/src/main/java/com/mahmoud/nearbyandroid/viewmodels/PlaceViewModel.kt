@@ -1,6 +1,6 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
-import android.os.AsyncTask
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
@@ -14,9 +14,8 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PlaceViewModel : PhotoUrlCallback {
+class PlaceViewModel {
 
-    val imageUrl = MutableLiveData("")
     val errorIcon = MutableLiveData(0)
     val errorText = MutableLiveData("")
     private lateinit var venueId: String
@@ -25,24 +24,40 @@ class PlaceViewModel : PhotoUrlCallback {
         const val IMAGE_WIDTH = 100
         const val IMAGE_HEIGHT = 100
 
-        // Static class not to leak memory
+/*        // Static class not to leak memory
         class RoomAsyncTask(private val callback: PhotoUrlCallback) : AsyncTask<String, Void, String?>() {
 
             override fun doInBackground(vararg venueId: String): String? {
-                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())
+                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())?.value
             }
 
             override fun onPostExecute(photoUrl: String?) {
                 callback.onPhotoUrlReady(photoUrl)
             }
-        }
+        }*/
     }
 
     fun getImageUrl(venueId: String) {
         this.venueId = venueId
-        // Get it from database first
+/*        // Get it from database first
         val asyncTask = RoomAsyncTask(this)
-        asyncTask.execute(venueId)
+        asyncTask.execute(venueId)*/
+        RetrofitClient.getInstance()
+            .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
+            ?.enqueue(object : Callback<PhotoResponseFromServer> {
+                override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
+                    errorIcon.value = R.drawable.ic_error
+                    errorText.value = t.localizedMessage
+                }
+
+                override fun onResponse(
+                    call: Call<PhotoResponseFromServer>,
+                    response: Response<PhotoResponseFromServer>
+                ) {
+                    Log.d("Mahmoud", call.request().url().toString())
+                    handleResponse(response)
+                }
+            })
     }
 
     private fun handleResponse(response: Response<PhotoResponseFromServer>) {
@@ -50,14 +65,20 @@ class PlaceViewModel : PhotoUrlCallback {
             response.body()?.let {
                 if (it.response.photos.photoItems.isNotEmpty()) {
                     val photo = it.response.photos.photoItems[0]
-                    val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
+                    val imageUrlString = String.format(
+                        "%s%dx%d%s",
+                        photo.prefix,
+                        IMAGE_WIDTH,
+                        IMAGE_HEIGHT,
+                        photo.suffix
+                    )
 
-                    // Save the URL to Database for future queries
+                    // Save the URL to Database which will emit a value (LiveData)
                     val photoUrl = PhotoUrl(venueId, imageUrlString)
-                    RoomClient.getInstance().databaseInstance?.photoUrlDao()?.insertPhotoUrl(photoUrl)
-
-                    // Post the url back to the view holder
-                    imageUrl.value = imageUrlString
+                    val client = RoomClient.getInstance()
+                    val database = client.databaseInstance
+                    val dao = database!!.photoUrlDao()
+                    dao.insertPhotoUrl(photoUrl)
                 }
                 return
             }
@@ -70,23 +91,6 @@ class PlaceViewModel : PhotoUrlCallback {
             }
         }
     }
-
-    override fun onPhotoUrlReady(photoUrl: String?) {
-        photoUrl?.let { imageUrl.value = it; return }
-
-        // PhotoUrl is null (Not in the database yet -> Send request)
-        RetrofitClient.getInstance()
-            .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)?.enqueue(object : Callback<PhotoResponseFromServer> {
-            override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
-                errorIcon.value = R.drawable.ic_error
-                errorText.value = t.localizedMessage
-            }
-
-            override fun onResponse(call: Call<PhotoResponseFromServer>, response: Response<PhotoResponseFromServer>) {
-                handleResponse(response)
-            }
-        })
-    }
 }
 
-interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?) }
+//interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?) }
