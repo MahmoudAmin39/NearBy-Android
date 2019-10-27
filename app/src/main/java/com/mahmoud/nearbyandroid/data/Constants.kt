@@ -4,8 +4,8 @@ class Constants {
 
     companion object {
         const val BASE_URL = "https://api.foursquare.com/v2/"
-        const val CLIENT_ID = "5AAKGAAOYCKET3DK3IRT42YQOBP50EGTJU4S0U1P1GE3QEI5"
-        const val CLIENT_SECRET = "WVTGKRKUHSEFTCHYVUWBDTOJRQZXROA5WIE3LJBL3MX0U0TJ"
+        const val CLIENT_ID = "E254DDLRZ5V14R2TBNWO1IFHVHM4QZBAYIKTTQCYYQUWU5YU"
+        const val CLIENT_SECRET = "K1IXNLWU5VRA0X2PQKXF1254F1ZKUZ5KB5HSWK5JRCXSFRCF"
         const val DATE_VERSION = "20200101"
         const val SHARED_PREFS = "NearBy Data"
         const val APP_MODE = "App_Mode"
