@@ -1,5 +1,7 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
+import android.os.AsyncTask
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
@@ -13,7 +15,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PlaceViewModel {
+class PlaceViewModel : PhotoUrlCallback {
 
     val errorIcon = MutableLiveData(0)
     val errorText = MutableLiveData("")
@@ -22,10 +24,31 @@ class PlaceViewModel {
     companion object {
         const val IMAGE_WIDTH = 100
         const val IMAGE_HEIGHT = 100
+
+        // Static class not to leak memory
+        class RoomAsyncTask(private val callback: PhotoUrlCallback) : AsyncTask<String, Void, String?>() {
+
+            private lateinit var venueId: String
+
+            override fun doInBackground(vararg venueId: String): String? {
+                this.venueId = venueId.first()
+                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())
+            }
+
+            override fun onPostExecute(photoUrl: String?) {
+                callback.onPhotoUrlReady(photoUrl)
+            }
+        }
     }
 
     fun getImageUrl(venueId: String) {
         this.venueId = venueId
+        // Get the photo from database
+        val task = RoomAsyncTask(this)
+        task.execute(venueId)
+    }
+
+    private fun getImageUrlFromApi() {
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
             ?.enqueue(object : Callback<PhotoResponseFromServer> {
@@ -74,4 +97,13 @@ class PlaceViewModel {
             }
         }
     }
+
+    override fun onPhotoUrlReady(photoUrl: String?) {
+        if (photoUrl == null) {
+            Log.d("Mahmoud", "Sending the request")
+            getImageUrlFromApi()
+        }
+    }
 }
+
+interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?) }

@@ -31,28 +31,13 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
+class NearByPlacesViewModel : ViewModel() {
 
     private var lastLocationSentToServer: Location? = null
     private val sharedPrefs = NearByApp.appContext?.getSharedPreferences(Constants.SHARED_PREFS, MODE_PRIVATE)
 
     companion object {
         const val METERS_THRESHOLD = 500
-
-        // Static class not to leak memory
-        class RoomAsyncTask(private val callback: PhotoUrlCallback) : AsyncTask<String, Void, String?>() {
-
-            private lateinit var venueId: String
-
-            override fun doInBackground(vararg venueId: String): String? {
-                this.venueId = venueId.first()
-                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())
-            }
-
-            override fun onPostExecute(photoUrl: String?) {
-                callback.onPhotoUrlReady(photoUrl, venueId)
-            }
-        }
     }
 
     // Errors
@@ -116,15 +101,8 @@ class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
 
     // region Places logic
 
-    private fun loadPlaces(currentLocation: Location) {
-        when(NetworkInformation().isInternetConnected()) {
-            false -> {  }
-            else -> { getPlacesFromServer(currentLocation)}
-        }
-    }
-
     fun loadPlaces() {
-        lastLocationSentToServer?.let { loadPlaces(it) }
+        lastLocationSentToServer?.let { getPlacesFromServer(it) }
     }
 
     private fun getPlacesFromServer(currentLocation: Location) {
@@ -159,9 +137,9 @@ class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
                         val venueObject =
                             Venue(venue)
                         venues.add(venueObject)
-                        // Get the Photo url from database
-                        val task = RoomAsyncTask(this)
-                        task.execute(venueObject.id!!)
+                        // Tell the Places view model to get the Photo url
+                        val venueViewModel = PlaceViewModel()
+                        venueViewModel.getImageUrl(venueObject.id!!)
                     }
                 }
                 venuesData.value = venues
@@ -170,13 +148,6 @@ class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
             }
         } else {
             showError(R.string.error_wrong, R.drawable.ic_cloud_off, ERROR_NO_RESPONSE)
-        }
-    }
-
-    override fun onPhotoUrlReady(photoUrl: String?, venueId: String) {
-        if (photoUrl == null) {
-            val placeViewModel = PlaceViewModel()
-            placeViewModel.getImageUrl(venueId)
         }
     }
 
@@ -189,12 +160,12 @@ class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
             // The first location sent to the view model
             if (lastLocationSentToServer == null) {
                 this.lastLocationSentToServer = currentLocation
-                loadPlaces(currentLocation)
+                getPlacesFromServer(currentLocation)
             } else {
                 val distance = currentLocation.distanceTo(lastLocationSentToServer)
                 if (distance > METERS_THRESHOLD) {
                     this.lastLocationSentToServer = currentLocation
-                    loadPlaces(currentLocation)
+                    getPlacesFromServer(currentLocation)
                 }
             }
 
@@ -251,5 +222,3 @@ class NearByPlacesViewModel : ViewModel(), PhotoUrlCallback {
 
     //endregion
 }
-
-interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?, venueId: String) }
