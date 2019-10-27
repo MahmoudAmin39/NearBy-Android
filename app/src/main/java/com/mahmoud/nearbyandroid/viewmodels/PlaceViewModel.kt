@@ -7,6 +7,7 @@ import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_SECRET
 import com.mahmoud.nearbyandroid.data.Constants.Companion.DATE_VERSION
 import com.mahmoud.nearbyandroid.data.models.photos.PhotoResponseFromServer
+import com.mahmoud.nearbyandroid.data.models.photos.PhotoUrl
 import com.mahmoud.nearbyandroid.data.retrofit.RetrofitClient
 import com.mahmoud.nearbyandroid.data.room.RoomClient
 import retrofit2.Call
@@ -39,6 +40,7 @@ class PlaceViewModel : PhotoUrlCallback {
 
     fun getImageUrl(venueId: String) {
         this.venueId = venueId
+        // Get it from database first
         val asyncTask = RoomAsyncTask(this)
         asyncTask.execute(venueId)
     }
@@ -49,6 +51,8 @@ class PlaceViewModel : PhotoUrlCallback {
                 if (it.response.photos.photoItems.isNotEmpty()) {
                     val photo = it.response.photos.photoItems[0]
                     val imageUrlString = String.format("%s%dx%d%s", photo.prefix, IMAGE_WIDTH, IMAGE_HEIGHT,photo.suffix)
+                    val photoUrl = PhotoUrl(venueId, imageUrlString)
+                    RoomClient.getInstance().databaseInstance?.photoUrlDao()?.insertPhotoUrl(photoUrl)
                     imageUrl.value = imageUrlString
                 }
                 return

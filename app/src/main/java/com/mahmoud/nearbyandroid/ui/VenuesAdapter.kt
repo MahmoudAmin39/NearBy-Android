@@ -16,8 +16,6 @@ import com.mahmoud.nearbyandroid.viewmodels.PlaceViewModel
 
 class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venues: ArrayList<Venue>) : RecyclerView.Adapter<VenuesAdapter.VenueViewHolder>() {
 
-    private var indicesThatSentRequests = mutableListOf<Int>()
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VenueViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_place, parent, false)
         return VenueViewHolder(view)
