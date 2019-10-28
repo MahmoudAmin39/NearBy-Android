@@ -17,8 +17,8 @@ import retrofit2.Response
 
 class VenueViewModel : PhotoUrlCallback {
 
+    val urlData = MutableLiveData("")
     val errorIcon = MutableLiveData(0)
-    val errorText = MutableLiveData("")
     private lateinit var venueId: String
 
     companion object {
@@ -54,7 +54,6 @@ class VenueViewModel : PhotoUrlCallback {
             ?.enqueue(object : Callback<PhotoResponseFromServer> {
                 override fun onFailure(call: Call<PhotoResponseFromServer>, t: Throwable) {
                     errorIcon.value = R.drawable.ic_error
-                    errorText.value = t.localizedMessage
                 }
 
                 override fun onResponse(
@@ -78,8 +77,10 @@ class VenueViewModel : PhotoUrlCallback {
                         IMAGE_HEIGHT,
                         photo.suffix
                     )
+                    // Post the data
+                    urlData.value = imageUrlString
 
-                    // Save the URL to Database which will emit a value (LiveData)
+                    // Save the URL to Database
                     val photoUrl = PhotoUrl(venueId, imageUrlString)
                     val client = RoomClient.getInstance()
                     val database = client.databaseInstance
@@ -92,17 +93,18 @@ class VenueViewModel : PhotoUrlCallback {
             errorIcon.value = R.drawable.ic_error
             if (response.code() == 429) {
                 QuotaObserver.isQuotaAvailable = false
-                errorText.value = "Quota exceeded"
-            } else {
-                errorText.value = response.message()
             }
         }
     }
 
     override fun onPhotoUrlReady(photoUrl: String?) {
-        if (photoUrl == null && QuotaObserver.isQuotaAvailable) {
-            Log.d("Mahmoud", "Sending the request")
-            getImageUrlFromApi()
+        if (photoUrl == null) {
+            if (QuotaObserver.isQuotaAvailable) {
+                Log.d("Mahmoud", "Sending the request")
+                getImageUrlFromApi()
+            }
+        } else {
+            urlData.value = photoUrl
         }
     }
 }
