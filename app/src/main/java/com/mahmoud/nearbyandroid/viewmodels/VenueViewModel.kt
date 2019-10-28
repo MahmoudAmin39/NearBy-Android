@@ -15,7 +15,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class PlaceViewModel : PhotoUrlCallback {
+class VenueViewModel : PhotoUrlCallback {
 
     val errorIcon = MutableLiveData(0)
     val errorText = MutableLiveData("")
@@ -91,6 +91,7 @@ class PlaceViewModel : PhotoUrlCallback {
         } else {
             errorIcon.value = R.drawable.ic_error
             if (response.code() == 429) {
+                QuotaObserver.isQuotaAvailable = false
                 errorText.value = "Quota exceeded"
             } else {
                 errorText.value = response.message()
@@ -99,7 +100,7 @@ class PlaceViewModel : PhotoUrlCallback {
     }
 
     override fun onPhotoUrlReady(photoUrl: String?) {
-        if (photoUrl == null) {
+        if (photoUrl == null && QuotaObserver.isQuotaAvailable) {
             Log.d("Mahmoud", "Sending the request")
             getImageUrlFromApi()
         }
@@ -107,3 +108,5 @@ class PlaceViewModel : PhotoUrlCallback {
 }
 
 interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?) }
+
+object QuotaObserver { var isQuotaAvailable = true }

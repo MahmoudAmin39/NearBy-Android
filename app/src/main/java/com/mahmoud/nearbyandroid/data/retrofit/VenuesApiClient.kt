@@ -5,7 +5,6 @@ import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants
 import com.mahmoud.nearbyandroid.data.models.venues.ResponseFromServer
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
-import com.mahmoud.nearbyandroid.viewmodels.PlaceViewModel
 import com.mahmoud.nearbyandroid.viewmodels.VenuesCallback
 import retrofit2.Call
 import retrofit2.Callback
@@ -55,9 +54,6 @@ class VenuesApiClient(private val callback: VenuesCallback) {
                         val venueObject =
                             Venue(venue)
                         venues.add(venueObject)
-                        // Tell the Places view model to get the Photo url
-                        val venueViewModel = PlaceViewModel()
-                        venueViewModel.getImageUrl(venueObject.id!!)
                     }
                 }
 

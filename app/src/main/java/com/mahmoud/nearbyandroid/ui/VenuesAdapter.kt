@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
 import com.mahmoud.nearbyandroid.data.room.RoomClient
+import com.mahmoud.nearbyandroid.viewmodels.VenueViewModel
 
 class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venues: ArrayList<Venue>) : RecyclerView.Adapter<VenuesAdapter.VenueViewHolder>() {
 
@@ -52,6 +53,10 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
                     return@let
                 }
             })
+
+            // Tell the Places view model to get the Photo url
+            val venueViewModel = VenueViewModel()
+            venueViewModel.getImageUrl(venue.id!!)
         }
     }
 }
