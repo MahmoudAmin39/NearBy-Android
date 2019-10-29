@@ -1,6 +1,5 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.Constants.Companion.CLIENT_ID
@@ -27,7 +26,6 @@ class VenueViewModel {
 
     fun getImageUrlFromApi(venueId: String) {
         this.venueId = venueId
-        Log.d("Mahmoud", "Requesting data from Server")
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
             ?.enqueue(object : Callback<PhotoResponseFromServer> {
@@ -61,7 +59,8 @@ class VenueViewModel {
 
                     // Save the URL to Database
                     val photoUrl = PhotoUrl(venueId, imageUrlString)
-                    RoomClient.getInstance().databaseInstance?.photoUrlDao()?.insertPhotoUrl(photoUrl)
+                    RoomClient.getInstance().databaseInstance?.photoUrlDao()
+                        ?.insertPhotoUrl(photoUrl)
                 }
                 return
             }
