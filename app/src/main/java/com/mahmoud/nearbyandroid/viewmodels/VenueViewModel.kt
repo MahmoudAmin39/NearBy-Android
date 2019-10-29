@@ -1,6 +1,5 @@
 package com.mahmoud.nearbyandroid.viewmodels
 
-import android.os.AsyncTask
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.mahmoud.nearbyandroid.R
@@ -15,7 +14,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class VenueViewModel : PhotoUrlCallback {
+class VenueViewModel {
 
     val urlData = MutableLiveData("")
     val errorIcon = MutableLiveData(0)
@@ -24,31 +23,11 @@ class VenueViewModel : PhotoUrlCallback {
     companion object {
         const val IMAGE_WIDTH = 100
         const val IMAGE_HEIGHT = 100
-
-        // Static class not to leak memory
-        class RoomAsyncTask(private val callback: PhotoUrlCallback) : AsyncTask<String, Void, String?>() {
-
-            private lateinit var venueId: String
-
-            override fun doInBackground(vararg venueId: String): String? {
-                this.venueId = venueId.first()
-                return RoomClient.getInstance().databaseInstance?.photoUrlDao()?.getPhotoUrl(venueId = venueId.first())
-            }
-
-            override fun onPostExecute(photoUrl: String?) {
-                callback.onPhotoUrlReady(photoUrl)
-            }
-        }
     }
 
-    fun getImageUrl(venueId: String) {
+    fun getImageUrlFromApi(venueId: String) {
         this.venueId = venueId
-        // Get the photo from database
-        val task = RoomAsyncTask(this)
-        task.execute(venueId)
-    }
-
-    private fun getImageUrlFromApi() {
+        Log.d("Mahmoud", "Requesting data from Server")
         RetrofitClient.getInstance()
             .placesService?.getPhotos(venueId, CLIENT_ID, CLIENT_SECRET, DATE_VERSION)
             ?.enqueue(object : Callback<PhotoResponseFromServer> {
@@ -82,10 +61,7 @@ class VenueViewModel : PhotoUrlCallback {
 
                     // Save the URL to Database
                     val photoUrl = PhotoUrl(venueId, imageUrlString)
-                    val client = RoomClient.getInstance()
-                    val database = client.databaseInstance
-                    val dao = database!!.photoUrlDao()
-                    dao.insertPhotoUrl(photoUrl)
+                    RoomClient.getInstance().databaseInstance?.photoUrlDao()?.insertPhotoUrl(photoUrl)
                 }
                 return
             }
@@ -96,19 +72,8 @@ class VenueViewModel : PhotoUrlCallback {
             }
         }
     }
-
-    override fun onPhotoUrlReady(photoUrl: String?) {
-        if (photoUrl == null) {
-            if (QuotaObserver.isQuotaAvailable) {
-                Log.d("Mahmoud", "Sending the request")
-                getImageUrlFromApi()
-            }
-        } else {
-            urlData.value = photoUrl
-        }
-    }
 }
 
-interface PhotoUrlCallback { fun onPhotoUrlReady(photoUrl: String?) }
-
-object QuotaObserver { var isQuotaAvailable = true }
+object QuotaObserver {
+    var isQuotaAvailable = true
+}

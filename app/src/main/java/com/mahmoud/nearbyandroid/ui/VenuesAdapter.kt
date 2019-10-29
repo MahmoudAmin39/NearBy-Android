@@ -13,7 +13,10 @@ import com.mahmoud.nearbyandroid.R
 import com.mahmoud.nearbyandroid.data.models.venues.Venue
 import com.mahmoud.nearbyandroid.viewmodels.VenueViewModel
 
-class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venues: ArrayList<Venue>) : RecyclerView.Adapter<VenuesAdapter.VenueViewHolder>() {
+class VenuesAdapter(
+    private val lifecycleOwner: LifecycleOwner,
+    private val venues: ArrayList<Venue>
+) : RecyclerView.Adapter<VenuesAdapter.VenueViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VenueViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_place, parent, false)
@@ -25,7 +28,7 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
     }
 
     override fun onBindViewHolder(holder: VenueViewHolder, position: Int) {
-        holder.bindViews(venues[position], lifecycleOwner)
+        holder.bindViews(venues[position], lifecycleOwner, position)
     }
 
     fun addVenues(venues: ArrayList<Venue>) {
@@ -40,23 +43,32 @@ class VenuesAdapter(private val lifecycleOwner: LifecycleOwner, private val venu
         private var venueName: TextView = v.findViewById(R.id.textView_venue_name)
         private var venueAddress: TextView = v.findViewById(R.id.textView_venue_address)
 
-        fun bindViews(venue: Venue, lifecycleOwner: LifecycleOwner) {
+        fun bindViews(venue: Venue, lifecycleOwner: LifecycleOwner, position: Int) {
             venueName.text = venue.name ?: "Venue name here"
             venueAddress.text = venue.location ?: "Venue address here"
 
-            // Tell the Places view model to get the Photo url
-            val venueViewModel = VenueViewModel()
-            venueViewModel.getImageUrl(venue.id!!)
+            if (venue.photoUrl != null) {
+                loadImageWith(url = venue.photoUrl!!)
+            } else {
+                VenueViewModel().apply {
+                    urlData.observe(lifecycleOwner, Observer { imageUrl ->
+                        imageUrl?.let {
+                            if (imageUrl != "") {
+                                // getting the position from adapterPosition sometimes returns -1 and crashes the application
+                                venues[position].photoUrl = imageUrl
+                                notifyItemChanged(position)
+                            }
+                            return@let
+                        }
+                    })
 
-            // Observe the data
-            venueViewModel.urlData.observe(lifecycleOwner, Observer {imageUrl ->
-                imageUrl?.let {
-                    if (imageUrl != "") {
-                        Glide.with(itemView.context).load(imageUrl).into(venueImage)
-                    }
-                    return@let
+                    getImageUrlFromApi(venueId = venue.id!!)
                 }
-            })
+            }
+        }
+
+        private fun loadImageWith(url: String) {
+            Glide.with(itemView.context).load(url).into(venueImage)
         }
     }
 }

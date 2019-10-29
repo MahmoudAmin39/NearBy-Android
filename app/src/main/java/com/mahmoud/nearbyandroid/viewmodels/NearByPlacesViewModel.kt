@@ -21,7 +21,7 @@ import com.mahmoud.nearbyandroid.data.retrofit.VenuesApiClient
 import com.mahmoud.nearbyandroid.helpers.LocationInformation
 import com.mahmoud.nearbyandroid.helpers.NetworkInformation
 
-class NearByPlacesViewModel : ViewModel(), VenuesCallback {
+class NearByPlacesViewModel : ViewModel(), VenuesCallback, VenuesWithPhotosCallback {
 
     private val apiClient = VenuesApiClient(this)
     private var lastLocationSentToServer: Location? = null
@@ -103,7 +103,12 @@ class NearByPlacesViewModel : ViewModel(), VenuesCallback {
     }
 
     override fun onVenuesReady(venues: ArrayList<Venue>) {
-        venuesData.value = venues
+        val task = RoomAsyncTask(this)
+        task.execute(venues)
+    }
+
+    override fun onVenuesWithPhotosReady(venues: List<Venue>) {
+        venuesData.value = ArrayList(venues)
         showListView()
     }
     // endregion
